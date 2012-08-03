@@ -95,9 +95,9 @@ if (!empty($displaysection) && $course->coursedisplay == COURSE_DISPLAY_MULTIPAG
 
         /* Set settings */
         #set-settings {
-            background: transparent url(<?php echo $CFG->wwwroot ?>/course/format/topcoll/images/tc_logo_spanner.png) no-repeat 0px 0px; 
+            /*background: transparent url(<?php echo $CFG->wwwroot ?>/course/format/topcoll/images/tc_logo_spanner.png) no-repeat 0px 0px; 
             width: 128px;
-            height: 100px;
+            height: 100px;*/
             float: right;
             margin: 4px;
         }

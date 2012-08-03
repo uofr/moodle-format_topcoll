@@ -250,7 +250,9 @@ class format_topcoll_renderer extends format_section_renderer_base {
                     }
                     //$o.='<br />' . $section->summary;
                 }
-                if ($PAGE->user_is_editing() && has_capability('moodle/course:update', $context)) {
+				// this section adds an extra edit icon if the section is closed. Let's make the user open the section to edit it so that it's cleaner and more logical.
+                /*
+				if ($PAGE->user_is_editing() && has_capability('moodle/course:update', $context)) {
                     $url = new moodle_url('/course/editsection.php', array('id' => $section->id));
 
                     if ($onsectionpage) {
@@ -259,6 +261,7 @@ class format_topcoll_renderer extends format_section_renderer_base {
 
                     $o.= html_writer::link($url, html_writer::empty_tag('img', array('src' => $this->output->pix_url('t/edit'), 'class' => 'iconsmall edit')), array('title' => get_string('editsummary')));
                 }
+				*/
                 $o.= html_writer::end_tag('a');
                 $o.= html_writer::end_tag('div');
                 $o.= html_writer::start_tag('div', array('class' => 'sectionbody toggledsection', 'id' => 'toggledsection-' . $section->section));
@@ -349,7 +352,7 @@ class format_topcoll_renderer extends format_section_renderer_base {
         echo $this->start_section_list();
 
         // Collapsed Topics settings.
-        echo $this->settings($course);
+        //echo $this->settings($course);
 
         // General section if non-empty.
         $thissection = $sections[0];
@@ -365,7 +368,7 @@ class format_topcoll_renderer extends format_section_renderer_base {
 
         if ($PAGE->user_is_editing() || $course->coursedisplay != COURSE_DISPLAY_MULTIPAGE) {
             // Collapsed Topics all toggles.
-            echo $this->toggle_all();
+            echo $this->toggle_all($course);
         }
 
         $currentsectionfirst = false;
@@ -650,7 +653,10 @@ class format_topcoll_renderer extends format_section_renderer_base {
 
             $o.= html_writer::start_tag('div', array('class' => 'content'));
             $o.= html_writer::start_tag('div', array('class' => 'sectionbody'));
-            $o.= html_writer::tag('a', html_writer::tag('div', '', array('id' => 'set-settings')), array('title' => get_string("settings"), 'href' => 'format/topcoll/forms/settings.php?id=' . $course->id . '&sesskey=' . sesskey()));
+
+			// the settings graphic is horrible; how about a button? moved output to toggle_all function to keep together, (better context)
+			//$o.= html_writer::tag('a', html_writer::tag('div', '', array('id' => 'set-settings')), array('title' => get_string("settings"), 'href' => 'format/topcoll/forms/settings.php?id=' . $course->id . '&sesskey=' . sesskey()));
+			
             $o.= html_writer::end_tag('div');
             $o.= html_writer::end_tag('div');
             $o.= html_writer::end_tag('li');
@@ -662,8 +668,8 @@ class format_topcoll_renderer extends format_section_renderer_base {
      * Displays the toggle all fuctionality.
      * @return string HTML to output.
      */
-    public function toggle_all() {
-        global $tcscreenreader;
+    public function toggle_all($course) {
+        global $tcscreenreader, $PAGE;
         $o = '';
         if ($tcscreenreader == false) { // No need to show if in screen reader mode.
             $toggletext = get_string('topcolltoggle', 'format_topcoll'); // The word 'Toggle'.
@@ -678,11 +684,25 @@ class format_topcoll_renderer extends format_section_renderer_base {
 
             $o.= html_writer::start_tag('div', array('class' => 'content'));
             $o.= html_writer::start_tag('div', array('class' => 'sectionbody'));
+			
+			// moved settings function here; re-created as a button - cunnintr
+	        $coursecontext = context_course::instance($course->id);
+	        if ($PAGE->user_is_editing() && has_capability('moodle/course:update', $coursecontext)) {
+			
+				$o.= html_writer::start_tag('form',array('id' => 'form-set-settings', 'action' => 'format/topcoll/forms/settings.php', 'method'=>'get'));
+				$o.= html_writer::tag('input', '', array('type'=>'hidden', 'name'=>'id', 'id'=>'id', 'value'=>$course->id));
+				$o.= html_writer::tag('input', '', array('type'=>'hidden', 'name'=>'sesskey', 'id'=>'sesskey', 'value'=>sesskey()));
+				$o.= html_writer::tag('input', '', array('type'=>'submit', 'id'=>'set-settings', 'value'=> get_string("edit") . ' ' .  get_string('pluginname', 'format_topcoll') . ' ' . get_string("settings")));
+		        $o.= html_writer::end_tag('form');
+			}
+			// end settings button move - cunnintr
+			
             $o.= html_writer::start_tag('h4', null);
             $o.= html_writer::tag('a', get_string('topcollopened', 'format_topcoll'), array('class' => 'on', 'href' => '#', 'onclick' => 'all_opened(); return false;'));
             $o.= html_writer::tag('a', get_string('topcollclosed', 'format_topcoll'), array('class' => 'off', 'href' => '#', 'onclick' => 'all_closed(); return false;'));
             $o.= html_writer::tag('span', get_string('topcollall', 'format_topcoll'), null);
             $o.= html_writer::end_tag('h4');
+			
             $o.= html_writer::end_tag('div');
             $o.= html_writer::end_tag('div');
             $o.= html_writer::end_tag('li');

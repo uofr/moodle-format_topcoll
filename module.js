@@ -28,19 +28,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Cleaned through use of http://jshint.com/.
+
 // Global variables 
 var toggleBinaryGlobal = "10000000000000000000000000000000000000000000000000000"; // 53 possible toggles - current settings in Moodle for number of topics - 52 + 1 for topic 0.  Need 1 as Most Significant bit to allow toggle 1+ to be off.
 var thesparezeros = "00000000000000000000000000"; // A constant of 26 0's to be used to pad the storage state of the toggles when converting between base 2 and 36, this is to be compact.
 var toggleState;
 var courseid;
-var thewwwroot;  // For the toggle graphic.
 var numToggles = 0;
-var currentSection;
-//var ie = false;
-var mymobiletheme = false;
+var togglePersistence = 1; // Toggle persistence - 1 = on, 0 = off.
 var ourYUI;
-
-// Because I like the idea of private and public methods, public will have an underscore in the name.
 
 /**
  * @namespace
@@ -50,57 +47,91 @@ M.format_topcoll = M.format_topcoll || {};
 /**
  * Initialise with the information supplied from the course format 'format.php' so we can operate.
  * @param {Object} Y YUI instance
- * @param {String} wwwroot the URL of the Moodle site
  * @param {Integer} thecourseid the id of the current course to allow for settings for each course.
  * @param {String} thetogglestate the current state of the toggles.
+ * @param {Integer} noOfToggles The number of toggles.
+ * @param {Integer} theTogglePersistence Persistence on (1) or off (0).
  */
-M.format_topcoll.init = function(Y, wwwroot, thecourseid, thetogglestate) {
+M.format_topcoll.init = function(Y, thecourseid, thetogglestate, noOfToggles, theTogglePersistence) {
+    "use strict";
     // Init.
     ourYUI = Y;
-    thewwwroot = wwwroot;
     courseid = thecourseid;
     toggleState = thetogglestate;
-    //alert(toggleState);
-    //alert('Init: www: ' + wwwroot + ' mooid: ' + moodleid + ' corid: ' + courseid + ' cookielt: ' + cookielifetime);
-    /* if (/MSIE (\d+\.\d+);/.test(navigator.userAgent))
-    {
-        // Info from: http://www.javascriptkit.com/javatutors/navigator.shtml - accessed 2nd September 2011.
-        var ieversion = new Number(RegExp.$1);
-        ie = true;
-        //alert('Is IE ' + ieversion);
-    } */
-    if (document.getElementById("mymobile")) {
-        mymobiletheme = true;
-    }
-//alert(mymobiletheme);
-}
+    numToggles = noOfToggles;
+    togglePersistence = theTogglePersistence;
 
-M.format_topcoll.set_current_section = function (Y, theSection) {
-    currentSection = theSection;
-//alert(currentSection);
-}
+    if (toggleState !== null)
+    {
+        toggleBinaryGlobal = to2baseString(toggleState);
+    }
+    else
+    {
+        // Reset to default.
+        toggleBinaryGlobal = "10000000000000000000000000000000000000000000000000000";
+    }
+
+    // Info on http://yuilibrary.com/yui/docs/event/
+    // Event handlers for the toggles.
+    for (var theToggle = 1; theToggle <= numToggles; theToggle++)
+    {
+        var toggler = document.getElementById("toggle-" + theToggle); // Need the DOM element not the YUI one for manipulation purposes.
+        if (toggler !== null)
+        {
+            var instance = new CollapsedTopicsToggler(toggler,theToggle);
+            Y.one("#toggle-" + theToggle).on('click', instance.handleClick, instance);
+        }
+    }
+    
+    // Event handlers for all opened / closed.
+    var allopen = Y.one("#toggles-all-opened");
+    if (allopen) {
+        allopen.on('click',function(e){
+            e.preventDefault();
+            all_opened();
+        });
+    }
+    var allclosed = Y.one("#toggles-all-closed");
+    if (allclosed) {
+        allclosed.on('click',function(e){
+            e.preventDefault();
+            all_closed();
+        });
+    }
+};
+
+// Info on http://pivotallabs.com/users/pjaros/blog/articles/1368-javascript-constructors-prototypes-and-the-new-keyword
+var CollapsedTopicsToggler = function CollapsedTopicsToggler(toggler,toggleNum)
+{
+    "use strict";
+    this.toggler = toggler;
+    this.toggleNum = toggleNum;
+};
+
+// Info on http://yuilibrary.com/yui/docs/event/
+CollapsedTopicsToggler.prototype = {
+    handleClick: function (e) {
+        "use strict";
+        e.preventDefault();
+        toggle_topic(this.toggler,this.toggleNum);
+    }
+};
 
 // Change the toggle binary global state as a toggle has been changed - toggle number 0 should never be switched as it is the most significant bit and represents the non-toggling topic 0.
 // Args - toggleNum is an integer and toggleVal is a string which will either be "1" or "0"
 //        savetoggles save the toggle state - used so that all_toggles does not make multiple requests but instead one.
 function togglebinary(toggleNum, toggleVal, savetoggles)
 {
+    "use strict";
     // Toggle num should be between 1 and 52 - see definition of toggleBinaryGlobal above.
     if ((toggleNum >=1) && (toggleNum <= 52))
     {
-        //alert("togglebinary tbg:" + toggleBinaryGlobal);
-        
         // Safe to use.
         var start = toggleBinaryGlobal.substring(0,toggleNum);
         var end = toggleBinaryGlobal.substring(toggleNum+1);
-        //var newval = start + toggleVal + end;
         toggleBinaryGlobal = start + toggleVal + end;
         
-        //toggleBinaryGlobal = newval;
-
-        //alert("togglebinary toggleNum:" + toggleNum + " st:" + start + " ed:" + end + " tv:" + toggleVal + " tbg:" + toggleBinaryGlobal);
-
-        if (savetoggles == true) 
+        if (savetoggles === true) 
         {
             save_toggles();
         }
@@ -115,33 +146,19 @@ function togglebinary(toggleNum, toggleVal, savetoggles)
 //        savetoggles save the toggle state - used so that all_toggles does not make multiple requests but instead one.
 function toggleexacttopic(target,image,toggleNum,reloading,savetoggles)  // Toggle the target and change the image.
 {
+    "use strict";
     if(document.getElementById)
     {
-        //if (ie == true)
-        //{
-        //var displaySetting = "table-row";
-        //}
-        //else
-        //{
         var displaySetting = "block";
-        //}
-        
-        //alert("toggleexacttopic tdisp:" + target.style.display + " disp:" + displaySetting + " ton:" + toggleNum + " rl:" + reloading);
 
-        //var sectoggle = document.getElementById("toggle-" + toggleNum);
-        if (target.style.display == displaySetting)
+        if (target.style.display === displaySetting)
         {
             target.style.display = "none";
 
-            if (mymobiletheme == true) {
-                image.className = image.className.replace(/\b opencps\b/,''); //remove the class name
-                image.style.backgroundImage = "url(" + thewwwroot + "/course/format/topcoll/images/arrow_down.png)";  // Temporary until MyMobile is fixed - MDL-33115.
-            } else {
-                image.style.backgroundImage = "url(" + thewwwroot + "/course/format/topcoll/images/arrow_down.png)";
-            }
+            image.className = image.className.replace('toggle_open','toggle_closed');
 
             // Save the toggle!
-            if (reloading == false) {
+            if (reloading === false) {
                 togglebinary(toggleNum,"0",savetoggles);
             }
         }
@@ -149,15 +166,12 @@ function toggleexacttopic(target,image,toggleNum,reloading,savetoggles)  // Togg
         {
             target.style.display = displaySetting;
 
-            if (mymobiletheme == true) {
-                image.className += " opencps";  //add the class name
-                image.style.backgroundImage = "url(" + thewwwroot + "/course/format/topcoll/images/arrow_up.png)";  // Temporary until MyMobile is fixed - MDL-33115.
-            } else {
-                image.style.backgroundImage = "url(" + thewwwroot + "/course/format/topcoll/images/arrow_up.png)";
-            }
+            image.className = image.className.replace('toggle_closed','toggle_open');
 
             // Save the toggle!
-            if (reloading == false) togglebinary(toggleNum,"1",savetoggles);
+            if (reloading === false) {
+                togglebinary(toggleNum,"1",savetoggles);
+            }
         }
     }
 }
@@ -166,14 +180,11 @@ function toggleexacttopic(target,image,toggleNum,reloading,savetoggles)  // Togg
 // Args - toggler the tag that initiated the call, toggleNum the number of the toggle for which toggler is a part of - see format.php.
 function toggle_topic(toggler,toggleNum)
 {
-    //alert('toggle_topic ' + toggleNum);
-    if(document.getElementById)
-    {
-        imageSwitch = toggler;
-        targetElement = toggler.parentNode.nextSibling; // Called from <a> in a <div> so find the next <div>.
+    "use strict";
+    var imageSwitch = toggler.firstChild; // The image is on the <a> so now that 'toggler' is the <div> container, we need to get it.
+    var targetElement = toggler.nextSibling; // Event hander on the <div> containing the <a> so find the next <div>.
 
-        toggleexacttopic(targetElement,imageSwitch,toggleNum,false,true);
-    }
+    toggleexacttopic(targetElement,imageSwitch,toggleNum,false,true);
 }
 
 // Current maximum number of topics is 52, but as the converstion utilises integers which are 32 bit signed, this must be broken into two string segments for the
@@ -183,6 +194,7 @@ function toggle_topic(toggler,toggleNum)
 // Args - thirtysix - a 12 character string representing a base 36 number.
 function to2baseString(thirtysix)
 {
+    "use strict";
     // Break apart the string because integers are signed 32 bit and therefore can only store 31 bits, therefore a 53 bit number will cause overflow / carry with loss of resolution.
     var firstpart = parseInt(thirtysix.substring(0,6),36);
     var secondpart = parseInt(thirtysix.substring(6,12),36);
@@ -208,6 +220,7 @@ function to2baseString(thirtysix)
 // Args - two - a 52 character string representing a base 2 number.
 function to36baseString(two)
 {
+    "use strict";
     // Break apart the string because integers are signed 32 bit and therefore can only store 31 bits, therefore a 52 bit number will cause overflow / carry with loss of resolution.
     var firstpart = parseInt(two.substring(0,26),2);
     var secondpart = parseInt(two.substring(26,53),2);
@@ -233,57 +246,17 @@ function to36baseString(two)
 // Args - value is the base 36 state of the toggles.
 function savetogglestate(value)
 {
-    M.util.set_user_preference('topcoll_toggle_'+courseid , value);
-}
-
-// 'Private' version of reload_toggles
-function reloadToggles()
-{
-    if (toggleState != null)
+    "use strict";
+    if (togglePersistence === 1) // Toggle persistence - 1 = on, 0 = off.
     {
-        toggleBinaryGlobal = to2baseString(toggleState);
+        M.util.set_user_preference('topcoll_toggle_'+courseid , value);
     }
-    else
-    {
-        // Reset to default.
-        toggleBinaryGlobal = "10000000000000000000000000000000000000000000000000000";
-    }
-    //alert("Bongo3 " + toggleState + " " + numToggles + " " + toggleBinaryGlobal);
-    
-    //alert(toggleBinaryGlobal);
-    for (var theToggle = 1; theToggle <= numToggles; theToggle++)
-    {
-        if ((theToggle <= numToggles) && ((toggleBinaryGlobal.charAt(theToggle) == "1") || (theToggle == currentSection))) // Array index 0 is never tested - MSB thing.
-        {
-            //alert(theToggle);
-            var target = document.getElementById("toggledsection-"+theToggle);
-            var image = document.getElementById("toggle-" + theToggle);
-            if ((target != null) && (image != null))
-            {
-                toggleexacttopic(target,image.firstChild,theToggle,true,false);
-            }
-        //alert("Bongo4 " + theToggle);
-        }
-    }    
-}
-
-// Toggle persistence functions
-// Reload the toggles - called from an onload event handler setup at the bottom of format.php
-// aToggle sets the number of toggles we have on this course so that when restoring the state we do not attempt to set something that
-// no longer exists.  This can happen when the number of sections is reduced and we return to the course and reload the page
-// using the data from the cookie.
-M.format_topcoll.reload_toggles = function (Y, aToggle) {
-    //alert('reload_toggles(' + aToggle + ')');
-    numToggles = aToggle;
-    
-    Y.use('node-base', function(daYUI) {
-        daYUI.on("domready", reloadToggles);
-    });
 }
 
 // Save the toggles - called from togglebinary and allToggle.
 function save_toggles()
 {
+    "use strict";
     savetogglestate(to36baseString(toggleBinaryGlobal));
 }
 
@@ -291,19 +264,12 @@ function save_toggles()
 // Alter the state of the toggles.  Where 'state' needs to be true for open and false for close.
 function allToggle(state)
 {
+    "use strict";
     var displaySetting;
 
-    if (state == false)
+    if (state === false)
     {
-        // All on to set off!
-        //if (ie == false)
-        //{
         displaySetting = "block";
-    //}
-    //else
-    //{
-    //  displaySetting = "table-row";
-    //}
     }
     else
     {
@@ -315,12 +281,11 @@ function allToggle(state)
     {
         var target = document.getElementById("toggledsection-"+theToggle);
         var image = document.getElementById("toggle-" + theToggle);
-        if ((target != null) && (image != null))
+        if ((target !== null) && (image !== null))
         {
             target.style.display = displaySetting;
             toggleexacttopic(target,image.firstChild,theToggle,false,false);
         }
-    //alert(theToggle);
     }
     // Now save the state of the toggles for efficiency...
     save_toggles();
@@ -329,11 +294,13 @@ function allToggle(state)
 // Open all toggles.
 function all_opened()
 {
+    "use strict";
     allToggle(true);
 }
 
 // Close all toggles.
 function all_closed()
 {
+    "use strict";
     allToggle(false);
 }

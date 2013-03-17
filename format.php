@@ -34,10 +34,22 @@ require_once($CFG->libdir . '/filelib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
 // Horrible backwards compatible parameter aliasing..
-if ($topic = optional_param('ctopics', 0, PARAM_INT)) {
+if ($ctopic = optional_param('ctopics', 0, PARAM_INT)) { // Collapsed Topics old section parameter.
+    $url = $PAGE->url;
+    $url->param('section', $ctopic);
+    debugging('Outdated collapsed topic param passed to course/view.php', DEBUG_DEVELOPER);
+    redirect($url);
+}
+if ($topic = optional_param('topic', 0, PARAM_INT)) { // Topics and Grid old section parameter.
     $url = $PAGE->url;
     $url->param('section', $topic);
-    debugging('Outdated topic param passed to course/view.php', DEBUG_DEVELOPER);
+    debugging('Outdated topic / grid param passed to course/view.php', DEBUG_DEVELOPER);
+    redirect($url);
+}
+if ($week = optional_param('week', 0, PARAM_INT)) { // Weeks old section parameter.
+    $url = $PAGE->url;
+    $url->param('section', $week);
+    debugging('Outdated week param passed to course/view.php', DEBUG_DEVELOPER);
     redirect($url);
 }
 // End backwards-compatible aliasing..
@@ -49,23 +61,36 @@ if (($marker >= 0) && has_capability('moodle/course:setcurrentsection', $context
     course_set_marker($course->id, $marker);
 }
 
-$tcscreenreader = false;
-if ($USER->screenreader == 1) {
-    $tcscreenreader = true; // CONTRIB-3225 - If screenreader default back to a non-toggle based topics type format.
-}
-
 $renderer = $PAGE->get_renderer('format_topcoll');
 
-if (!empty($displaysection) && $course->coursedisplay == COURSE_DISPLAY_MULTIPAGE) {
+if (!empty($displaysection)) {
     $renderer->print_single_section_page($course, $sections, $mods, $modnames, $modnamesused, $displaysection);
 } else {
-    require_once($CFG->dirroot . '/course/format/topcoll/config.php');
+    require_once($CFG->dirroot . '/course/format/topcoll/tcconfig.php');
 
     user_preference_allow_ajax_update('topcoll_toggle_' . $course->id, PARAM_ALPHANUM);
 
-    $PAGE->requires->js_init_call('M.format_topcoll.init', array($CFG->wwwroot,
+    $thetogglestate = get_user_preferences('topcoll_toggle_' . $course->id);
+
+    $devicetype = get_device_type(); // In moodlelib.php.
+    if ($devicetype == "mobile" || $devicetype == "tablet") {
+        $mobile = 1;
+        require_once($CFG->libdir . '/outputcomponents.php');
+        // Echo data for mobile themes to be able to control the toggles not using YUI.
+        echo html_writer::start_tag('div', array('id' => 'topcoll_mobile_data', 'style' => 'display: none;',
+            'sesskey' => sesskey(), 'courseid' => $course->id, 'togglestate' => $thetogglestate,
+            'numberoftoggles' => $course->numsections, 'togglepersistence' => $TCCFG->togglepersistence));
+        echo html_writer::end_tag('div');
+    } else {
+        $mobile = 0;
+    }
+    $renderer->set_mobile($mobile);
+
+    $PAGE->requires->js_init_call('M.format_topcoll.init', array(
         $course->id,
-        get_user_preferences('topcoll_toggle_' . $course->id)));
+        $thetogglestate,
+        $course->numsections,
+        $TCCFG->togglepersistence));
 
     global $tcsetting;
     if (empty($tcsetting) == true) {
@@ -74,61 +99,35 @@ if (!empty($displaysection) && $course->coursedisplay == COURSE_DISPLAY_MULTIPAG
     ?>
     <style type="text/css" media="screen">
         /* <![CDATA[ */
-        /* -- Images here as need to know the full url due to [[pix:****]] not working with course formats in the css file and the relative position changes between theme designer mode on / off.  -- */
-
-        /* -- The clickable element of the Toggle -- */
-        .course-content ul.topics li.section .content .toggle a.cps_a {
-            background: transparent url(<?php echo $CFG->wwwroot ?>/course/format/topcoll/images/arrow_up.png) no-repeat 5px 45%; /* Position the arrow roughly in the centre of the Toggle.  This is shown by default when JavaScript is disabled. */
-        }
-
-        body.jsenabled .course-content ul.topics li.section .content .toggle a.cps_a {
-            background: transparent url(<?php echo $CFG->wwwroot ?>/course/format/topcoll/images/arrow_down.png) no-repeat 5px 45%; /* Position the arrow roughly in the centre of the Toggle.   This is shown by default when JavaScript is enabled. */
-        }
-
-        #toggle-all .content .sectionbody h4 a.on {
-            background: transparent url(<?php echo $CFG->wwwroot ?>/course/format/topcoll/images/arrow_down.png) no-repeat 0px 45%; 
-        }
-
-        #toggle-all .content .sectionbody h4 a.off {
-            background: transparent url(<?php echo $CFG->wwwroot ?>/course/format/topcoll/images/arrow_up.png) no-repeat 0px 45%; 
-        }
-
-        /* Set settings */
-        #set-settings {
-            /*background: transparent url(<?php echo $CFG->wwwroot ?>/course/format/topcoll/images/tc_logo_spanner.png) no-repeat 0px 0px; 
-            width: 128px;
-            height: 100px;*/
-            float: right;
-            margin: 4px;
-        }
 
         /* -- Toggle -- */
-        .course-content ul.topics li.section .content .toggle {
+        .course-content ul.ctopics li.section .content .toggle {
             background-color: #<?php echo $tcsetting->tgbgcolour; ?>;
-            color: #<?php echo $tcsetting->tgfgcolour; ?>; /* 'Topic x' text colour */
+            color: #<?php echo $tcsetting->tgfgcolour; ?>; /* Toggle text colour */
         }
 
         /* -- Toggle text -- */
-        .course-content ul.topics li.section .content .toggle a {
+        .course-content ul.ctopics li.section .content .toggle a {
             color: #<?php echo $tcsetting->tgfgcolour; ?>;
         }
 
         /* -- What happens when a toggle is hovered over -- */
-        .course-content ul.topics li.section .content div.toggle:hover,body.jsenabled tr.cps td a:hover
+        .course-content ul.ctopics li.section .content div.toggle:hover,body.jsenabled tr.cps td a:hover
         {
             background-color: #<?php echo $tcsetting->tgbghvrcolour; ?>;
         }
 
         /* Dynamically changing widths with language */
-        .course-content ul.topics li.section .content, .course-content ul.topics li.tcsection .content {
+        .course-content ul.ctopics li.section.main .content, .course-content ul.ctopics li.tcsection .content {
             <?php
             if ((!$PAGE->user_is_editing()) && ($PAGE->theme->name != 'mymobile')) {
                 echo 'margin: 0 ' . get_string('topcollsidewidth', 'format_topcoll');
             }
-            ?>;			
+
+            ?>;
         }
 
-        .course-content ul.topics li.section .left, .course-content ul.topics li.tcsection .left {
+        .course-content ul.ctopics li.section.main .side, .course-content ul.ctopics li.tcsection .side {
             <?php
             if (!$PAGE->user_is_editing()) {
                 echo 'width: ' . get_string('topcollsidewidth', 'format_topcoll');
@@ -136,27 +135,10 @@ if (!empty($displaysection) && $course->coursedisplay == COURSE_DISPLAY_MULTIPAG
             ?>;
         }
 
-        .course-content ul.topics li.section .right, .course-content ul.topics li.tcsection .right {
-            <?php
-            if (!$PAGE->user_is_editing()) {
-                echo 'width: ' . get_string('topcollsidewidth', 'format_topcoll');
-            }
-            ?>;
-        }
         /* ]]> */
     </style>
     <?php
-    $thecurrentsection = 0; // The section that will be the current section - manipulated in section_header in the renderer.
     $renderer->print_multiple_section_page($course, $sections, $mods, $modnames, $modnamesused);
-    //print ($thecurrentsection);
-    // Only toggle if no Screen Reader
-    if ($tcscreenreader == false) {
-        // Establish persistance when we have loaded.
-        // Reload the state of the toggles from the data contained within the cookie.
-        // Restore the state of the toggles from the cookie.
-        echo $PAGE->requires->js_init_call('M.format_topcoll.set_current_section', array($thecurrentsection)); // If thecurrentsection is 0 because it has not been changed from the defualt, then as section 0 is never tested so can be used to set none.
-        echo $PAGE->requires->js_init_call('M.format_topcoll.reload_toggles', array($course->numsections)); // reload_toggles uses the value set above.
-    }
 }
 
 // Include course format js module

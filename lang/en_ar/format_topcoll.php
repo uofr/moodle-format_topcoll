@@ -41,9 +41,8 @@ $string['topcolltoggle']='Toggle';
 $string['topcollsidewidth']='40px';
 
 // Toggle all - Moodle Tracker CONTRIB-3190
-$string['topcollall']='all toggles.';
-$string['topcollopened']='Untie';
-$string['topcollclosed']='Tie';
+$string['topcollopened']='Untie all';
+$string['topcollclosed']='Tie all';
 
 // Moodle 2.0 Enhancement - Moodle Tracker MDL-15252, MDL-21693 & MDL-22056 - http://docs.moodle.org/en/Development:Languages
 $string['sectionname'] = 'Section';
@@ -56,6 +55,7 @@ $string['page-course-view-topcoll-x'] = 'Any course page in collapsed topics for
 
 // Layout enhancement - Moodle Tracker CONTRIB-3378
 $string['formatsettings'] = 'Ye format settings'; // CONTRIB-3529
+$string['formatsettingsinformation'] = 'Ye edit Collapsed Topics settings';
 $string['setlayout'] = 'Set thee layout';
 $string['setlayout_default'] = 'Default';
 $string['setlayout_no_toggle_section_x'] = 'No toggle section x';
@@ -69,7 +69,7 @@ $string['setlayoutstructure'] = 'Set thee structure';
 $string['setlayoutstructuretopic']='Treasure Chest';
 $string['setlayoutstructureweek']='Sailing Week';
 $string['setlayoutstructureday'] = 'Sailing Day';
-$string['setlayoutstructurelatweekfirst']='Latest Sailing Week First';
+$string['setlayoutstructurelatweekfirst']='Current Sailing Week First';
 $string['setlayoutstructurecurrenttopicfirst']='Current Treasure Chest First';
 $string['resetlayout'] = 'Reset thee layout'; //CONTRIB-3529
 $string['resetalllayout'] = 'Reset thee layouts for all thy Collapsed Topics courses';
@@ -90,29 +90,32 @@ $string['two'] = 'Two';
 $string['three'] = 'Three';
 $string['four'] = 'Four';
 
+// Temporary until MDL-34917 in core.
+$string['maincoursepage'] = 'Ye main course page';
+
 // Help
 $string['setlayoutelements_help']='How much information about thee toggles / sections you wish to be displayed.';
 $string['setlayoutstructure_help']="Avast ye landlubbers, this be thee layout structure of thee course.  Ye choose between:
 
-'Topics' - where each section is presented as thy topic in section number order.
+'Treasure Chest' - where each section is presented as thy treasure chest in section number order.
 
-'Weeks' - where each section is presented as thy week in ascending week order.
+'Sailing Week' - where each section is presented as thy sailing week in ascending week order.
 
-'Latest Week First' - which is the same as weeks but thee current week is shown at thee top and preceding weeks in decending order are displayed below except in editing mode where thee structure is thy same as 'Weeks'.
+'Current Sailing Week First' - which is the same as weeks but thee current week is shown at thee top and preceding weeks in decending order are displayed below except in editing mode where thee structure is thy same as 'Weeks'.
 
-'Current Topic First' - which is thee same as 'Topics' except that thee current topic is shown at thee top if it has been set.
+'Current Treasure Chest First' - which is thee same as 'Treasure Chest' except that thee current treasure chest is shown at thee top if it has been set.
 
 'Day' - where each section is presented as a day in thy ascending day order from thee start date of thee course.";
 $string['setlayout_help'] = 'Contains thee settings to do with thee layout of the format within thy course.';
-$string['resetlayout_help'] = 'Resets thee layout to thee default values in "/course/format/topcoll/config.php" so it will be the same as a course the first time it is in thy Collapsed Topics format';
-$string['resetalllayout_help'] = 'Resets the layout to the default values in "/course/format/topcoll/config.php" for all courses so it will be the same as a course the first time it is in the Collapsed Topics format.';
+$string['resetlayout_help'] = 'Resets thee layout to thee default values in "/course/format/topcoll/tcconfig.php" so it will be the same as a course the first time it is in thy Collapsed Topics format';
+$string['resetalllayout_help'] = 'Resets the layout to the default values in "/course/format/topcoll/tcconfig.php" for all courses so it will be the same as a course the first time it is in the Collapsed Topics format.';
 // Moodle Tracker CONTRIB-3529
 $string['setcolour_help'] = 'Contains thee settings to do with thy colour of the format within the course.';
 $string['settoggleforegroundcolour_help'] = 'Sets thee colour of thy text on the toggle.';
 $string['settogglebackgroundcolour_help'] = 'Sets thee background of thy toggle.';
 $string['settogglebackgroundhovercolour_help'] = 'Sets thee background of thy toggle when thee mouse scuttles over it.';
-$string['resetcolour_help'] = 'Resets thee colours to thee default values in "/course/format/topcoll/config.php" so it will be thee same as a course thy first time it is in thee Collapsed Topics format';
-$string['resetallcolour_help'] = 'Resets thee colours to the default values in "/course/format/topcoll/config.php" for all courses so it will be thy same as a course the first time it is in thee Collapsed Topics format.';
+$string['resetcolour_help'] = 'Resets thee colours to thee default values in "/course/format/topcoll/tcconfig.php" so it will be thee same as a course thy first time it is in thee Collapsed Topics format';
+$string['resetallcolour_help'] = 'Resets thee colours to the default values in "/course/format/topcoll/tcconfig.php" for all courses so it will be thy same as a course the first time it is in thee Collapsed Topics format.';
 // Columns enhancement
 $string['setlayoutcolumns_help'] = 'How many columns to use.';
 ?>

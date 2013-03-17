@@ -36,7 +36,7 @@ M.course.format = M.course.format || {};
  * Get sections config for this format
  *
  * The section structure is:
- * <ul class="topics">
+ * <ul class="ctopics">
  *  <li class="section">...</li>
  *  <li class="section">...</li>
  *   ...
@@ -47,7 +47,7 @@ M.course.format = M.course.format || {};
 M.course.format.get_config = function() {
     return {
         container_node : 'ul',
-        container_class : 'topics',
+        container_class : 'ctopics',
         section_node : 'li',
         section_class : 'section'
     };
@@ -72,7 +72,6 @@ M.course.format.swap_sections = function(Y, node1, node2) {
     sectionlist.item(node1).one('.'+CSS.SECTIONADDMENUS).swap(sectionlist.item(node2).one('.'+CSS.SECTIONADDMENUS));
 }
 
-
 /**
  * Process sections after ajax response
  *
@@ -84,13 +83,33 @@ M.course.format.swap_sections = function(Y, node1, node2) {
  */
 M.course.format.process_sections = function(Y, sectionlist, response, sectionfrom, sectionto) {
     var CSS = {
-        SECTIONNAME : 'sectionname'
+        SECTIONNAME : 'the_toggle',
+    },
+    SELECTORS = {
+        SECTIONLEFTSIDE : '.left .section-handle img'
     };
-
+    
     if (response.action == 'move') {
-        // update titles in all affected sections
+        // If moving up swap around 'sectionfrom' and 'sectionto' so the that loop operates.
+        if (sectionfrom > sectionto) { // MDL-34798
+            var temp = sectionto;
+            sectionto = sectionfrom;
+            sectionfrom = temp;
+        }
+
+        // Update titles and move icons in all affected sections.
+        var ele, str, stridx, newstr;
+
         for (var i = sectionfrom; i <= sectionto; i++) {
+            // Update section title.
             sectionlist.item(i).one('.'+CSS.SECTIONNAME).setContent(response.sectiontitles[i]);
+            // Update move icon.  MDL-37901.
+            ele = sectionlist.item(i).one(SELECTORS.SECTIONLEFTSIDE);
+            str = ele.getAttribute('alt');
+            stridx = str.lastIndexOf(' ');
+            newstr = str.substr(0, stridx +1) + i;
+            ele.setAttribute('alt', newstr);
+            ele.setAttribute('title', newstr); // For FireFox as 'alt' is not refreshed.
         }
     }
 }

@@ -31,8 +31,8 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2012071100;
+$plugin->version = 2012110906; // As Moodle 2.4 version has now been released, only the minor component will increment.  Cannot ever exceed '2012120100' as that is the start of the 2.4 version.
 $plugin->maturity = MATURITY_STABLE;
-$plugin->requires = 2012062501.00; // 2.3.1 (Build: 20120706)
+$plugin->requires = 2012062504.01; // 2.3.4+ (Build: 20130118)
 $plugin->component = 'format_topcoll';
-$plugin->release = '2.3.7.1';
+$plugin->release = '2.3.9.9';

@@ -1,4 +1,18 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Collapsed Topics Information
@@ -16,18 +30,6 @@
  * @link       http://docs.moodle.org/en/Collapsed_Topics_course_format
  * @license    http://www.gnu.org/copyleft/gpl.html GNU Public License
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
-
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/course/format/topcoll/lib.php');
@@ -78,33 +80,23 @@ class restore_format_topcoll_plugin extends restore_format_plugin {
         } // From /course/view.php.
         $courseformat = course_get_format($course);
 
-        if (isset($data->layoutcolumns)) {
-            // In $CFG->dirroot.'/course/format/topcoll/lib.php'...
-            $courseformat->restore_topcoll_setting(
-                $data->courseid, 
-                $data->layoutelement,
-                $data->layoutstructure,
-                $data->layoutcolumns,
-                $data->tgfgcolour,
-                $data->tgbgcolour,
-                $data->tgbghvrcolour);
-        } else {
+        if (empty($data->layoutcolumns)) {        
             // Cope with backups from Moodle 2.0, 2.1 and 2.2 versions.
-            $courseformat->restore_topcoll_setting(
-                $data->courseid,
-                $data->layoutelement,
-                $data->layoutstructure,
-                get_config('format_topcoll', 'defaultlayoutcolumns'),
-                $data->tgfgcolour,
-                $data->tgbgcolour,
-                $data->tgbghvrcolour);
+            $data->layoutcolumns = get_config('format_topcoll', 'defaultlayoutcolumns');
         }
+        
+        $courseformat->restore_topcoll_setting(
+            $data->courseid,
+            $data->layoutelement,
+            $data->layoutstructure,
+            $data->layoutcolumns,
+            $data->tgfgcolour,
+            $data->tgbgcolour,
+            $data->tgbghvrcolour);
 
         // No need to annotate anything here.
     }
 
     protected function after_execute_structure() {
-        
     }
-
 }

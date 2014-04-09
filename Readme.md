@@ -6,12 +6,8 @@ If you find an issue with the format, please see the 'Reporting Issues' section 
 
 Required version of Moodle
 ==========================
-<<<<<<< HEAD
-This version works with Moodle version 2012120303.11 2.4.3+ (Build: 20130502) and above until the next release.
-=======
 This version works with Moodle version 2013111800.00 release 2.6 (Build: 20131118) and above within the 2.6 branch until the
 next release.
->>>>>>> 170ddd85831fae2789f2963a149738c4a7b4deb3
 
 Please ensure that your hardware and software complies with 'Requirements' in 'Installing Moodle' on
 'docs.moodle.org/26/en/Installing_Moodle'.
@@ -60,32 +56,12 @@ please download an older version from https://moodle.org/plugins/pluginversions.
 this table as a guide:
 
 CT version - Moodle version
-<<<<<<< HEAD
-V2.4.4.2     2.4.1+, version 2012120301.02 (Build: 20130118).
-V2.4.1.7     2.4+    version 2012120300.00 (Build: 20121203).
-
-New features for this Moodle 2.4.1 version
-==========================================
- 1. Settings moved to the 'Edit course settings' form.
- 2. Ability to turn off persistence by changing the default 'defaulttogglepersistence' in
-    'Site Administration -> Plugins -> Course formats -> Collapsed Topics'.
- 3. Horizontal and vertical column layouts.
- 4. Left, centre and right toggle text alignment.
- 5. Icon sets where you can choose what set of control icons are appropriate on a per course basis.  See 'Icon Sets'
-    below.
- 6. Moved all 'tcconfig.php' default functionalty to 'Site Administration -> Plugins -> Course formats -> Collapsed Topics'
-    so that defaults can be changed by the administrator from within Moodle without resorting to code changes.
- 7. Added capabilities 'format/topcoll:changelayout', 'format/topcoll:changecolour', 'format/topcoll:changetogglealignment'
-    and 'format/topcoll:changetoggleiconset' to editing teachers and managers such that site administrators can choose to
-    disable functionality through roles if they wish.
-=======
 V2.5.0.1     2.5beta+ version 2013041100.00 (Build: 20130411).
 V2.5.0.4     2.5beta+ version 2013050200.00 (Build: 20130502).
 
 New features for this Moodle 2.6 version
 ========================================
  1. Same features as version 2.5.3.5 in Moodle 2.5.
->>>>>>> 170ddd85831fae2789f2963a149738c4a7b4deb3
 
 Installation
 ============
@@ -1136,10 +1112,6 @@ Desired Enhancements
 
 Me
 ==
-<<<<<<< HEAD
-G J Barnard MSc. BSc(Hons)(Sndw). MBCS. CEng. CITP. PGCE. - 8th May 2013.
-=======
 G J Barnard MSc. BSc(Hons)(Sndw). MBCS. CEng. CITP. PGCE. - 28th March 2014.
->>>>>>> 170ddd85831fae2789f2963a149738c4a7b4deb3
 Moodle profile: http://moodle.org/user/profile.php?id=442195.
 Web profile   : http://about.me/gjbarnard

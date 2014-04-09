@@ -944,11 +944,7 @@ class format_topcoll extends format_base {
      * @param int $togglealignment If true, reset the toggle alignment to the default in the settings for the format.
      * @param int $toggleiconset If true, reset the toggle icon set to the default in the settings for the format.
      */
-<<<<<<< HEAD
-    public function reset_topcoll_setting($courseid, $layout, $colour, $togglealignment, $toggleiconset) {
-=======
     public function reset_topcoll_setting($courseid, $displayinstructions, $layout, $colour, $togglealignment, $toggleiconset) {
->>>>>>> 170ddd85831fae2789f2963a149738c4a7b4deb3
         global $DB, $USER, $COURSE;
 
         $coursecontext = context_course::instance($COURSE->id);

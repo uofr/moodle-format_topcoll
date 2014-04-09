@@ -242,11 +242,7 @@ class format_topcoll_renderer extends format_section_renderer_base {
     }
 
     /**
-<<<<<<< HEAD
-     * Generate a summary of a section for display on the 'coruse index page'
-=======
      * Generate a summary of a section for display on the 'course index page'
->>>>>>> 170ddd85831fae2789f2963a149738c4a7b4deb3
      *
      * @param stdClass $section The course_section entry from DB
      * @param stdClass $course The course entry from DB
@@ -257,26 +253,15 @@ class format_topcoll_renderer extends format_section_renderer_base {
         $classattr = 'section main section-summary clearfix';
         $linkclasses = '';
 
-<<<<<<< HEAD
-        // If section is hidden then display grey section link
-        if (!$section->visible) {
-            $classattr .= ' hidden';
-            $linkclasses .= ' dimmed_text';
-        } else if (course_get_format($course)->is_section_current($section)) {
-=======
         // If section is hidden then display grey section link.
         if (!$section->visible) {
             $classattr .= ' hidden';
             $linkclasses .= ' dimmed_text';
         } else if ($this->courseformat->is_section_current($section)) {
->>>>>>> 170ddd85831fae2789f2963a149738c4a7b4deb3
             $classattr .= ' current';
         }
 
         $o = '';
-<<<<<<< HEAD
-        $liattributes = array('id' => 'section-'.$section->section, 'class' => $classattr);
-=======
         $title = $this->courseformat->get_topcoll_section_name($course, $section, false);
         $liattributes = array(
             'id' => 'section-'.$section->section,
@@ -284,7 +269,6 @@ class format_topcoll_renderer extends format_section_renderer_base {
             'role' => 'region',
             'aria-label'=> $title
         );
->>>>>>> 170ddd85831fae2789f2963a149738c4a7b4deb3
         if ($this->tcsettings['layoutcolumnorientation'] == 2) { // Horizontal column layout.
             $liattributes['style'] = 'width:' . $this->tccolumnwidth . '%;';
         }
@@ -294,10 +278,6 @@ class format_topcoll_renderer extends format_section_renderer_base {
         $o .= html_writer::tag('div', '', array('class' => 'right side'));
         $o .= html_writer::start_tag('div', array('class' => 'content'));
 
-<<<<<<< HEAD
-        $title = get_section_name($course, $section);
-=======
->>>>>>> 170ddd85831fae2789f2963a149738c4a7b4deb3
         if ($section->uservisible) {
             $title = html_writer::tag('a', $title,
                     array('href' => course_get_url($course, $section->section), 'class' => $linkclasses));

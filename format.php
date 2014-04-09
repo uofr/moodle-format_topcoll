@@ -95,10 +95,7 @@ if (!empty($displaysection)) {
     $PAGE->requires->js_init_call('M.format_topcoll.init', array(
         $course->id,
         $userpreference,
-<<<<<<< HEAD
-=======
         $course->numsections,
->>>>>>> 170ddd85831fae2789f2963a149738c4a7b4deb3
         clean_param(get_config('format_topcoll', 'defaulttogglepersistence'), PARAM_INT),
         $defaultuserpreference));
 

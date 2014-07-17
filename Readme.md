@@ -1,4 +1,4 @@
-﻿Introduction
+Introduction
 ============
 Topic based course format with an individual 'toggle' for each topic except 0.
 
@@ -249,6 +249,10 @@ can be really useful in visualising the issue along with any files you consider 
 
 Version Information
 ===================
+17th April 2014 Version 2.6.1.5
+  1.  Fixed CONTRIB-4099 with the arrangement of the editing icon and associated functionality such that a better solution is
+      applied for the specific nature of the format.
+
 28th March 2014 Version 2.6.1.4
   1.  Fixed slight issue with mobile / tablet display issue of toggle all and instructions.
   2.  Fixed issue with Bootstrap 3 breaking the layout of hidden sections when >= 2 columns.
@@ -1039,22 +1043,6 @@ Development Notes:
 
 21st February 2009 - Version 0.1
 
-27th April 2013 - Version 2.4.4.1
-  1.  Fixed an obscure bug with '$defaultuserpreference' in 'format.php' not being parsed to 'M.format_topcoll.init' in 'module.js'.
-  2.  Thanks to ideas from Ben Kelada and help from Andrew Nicols / Tim Hunt, I have made the event handing toggle functions more efficient.
-  3.  Please perform a 'Purge all caches' under 'Home -> Site administration -> Development -> Purge all caches' when upgrading.
-
-29th April 2013 - Version 2.4.4.2
-  1.  Fixed non-referenced member variable bug which showed up as 'undefined' but should have been a reference error in testing.
-  2.  Please perform a 'Purge all caches' under 'Home -> Site administration -> Development -> Purge all caches' when upgrading.
-
-8th May 2013 - Version 2.4.4.3
-  1.  Fixed coding fault with resetting introduced in capabilities change.
-  2.  Fixed "When in 'Show one section per page' mode and the column orientation is set to 'Horizontal' the sections on the main
-      page do not fill their correct width.  This is due to the use of the 'section_summary()' method which needs to be changed
-      within the format to set the calculated width on the 'li' tag." because the core fix I submitted on MDL-39099 has now
-      been integrated.  Thus requiring version 2012120303.11 2.4.3+ (Build: 20130502).
-
 Thanks
 ======
 I would like to thank Anthony Borrow - arborrow@jesuits.net & anthony@moodle.org - for his invaluable input.
@@ -1112,6 +1100,6 @@ Desired Enhancements
 
 Me
 ==
-G J Barnard MSc. BSc(Hons)(Sndw). MBCS. CEng. CITP. PGCE. - 28th March 2014.
+G J Barnard MSc. BSc(Hons)(Sndw). MBCS. CEng. CITP. PGCE. - 17th April 2014.
 Moodle profile: http://moodle.org/user/profile.php?id=442195.
 Web profile   : http://about.me/gjbarnard

@@ -353,8 +353,8 @@ class format_topcoll_renderer extends format_section_renderer_base {
 
                 $rightcontent .= html_writer::link($url, html_writer::empty_tag('img',
                                     array('src' => $this->output->pix_url('t/edit'),
-                                          'class' => 'icon edit tceditsection', 'alt' => get_string('edit'))),
-                                    array('title' => get_string('editsummary'), 'class' => 'tceditsection'));
+                                          'class' => 'iconsmall edit tceditsection', 'alt' => get_string('edit'))),
+                                    array('title' => get_string('editsummary'), 'class' => 'tceditsection editsumm'));
             }
             $rightcontent .= $this->section_right_content($section, $course, $onsectionpage);
             $o .= html_writer::tag('div', $rightcontent, array('class' => 'right side'));
@@ -400,9 +400,9 @@ class format_topcoll_renderer extends format_section_renderer_base {
 
             if ($this->userisediting && has_capability('moodle/course:update', $context)) {
                 $url = new moodle_url('/course/editsection.php', array('id' => $section->id, 'sr' => $sectionreturn));
-                $o .= html_writer::link($url, html_writer::empty_tag('img', array('src' => $this->output->pix_url('t/edit'),
-                                    'class' => 'iconsmall edit', 'alt' => get_string('edit'))),
-                                    array('title' => get_string('editsummary')));
+                $o.= html_writer::link($url, html_writer::empty_tag('img', array('src' => $this->output->pix_url('t/edit'),
+                                    'class' => 'iconsmall edit', 'alt' => get_string('edit'))).get_string('edit'),
+                                    array('title' => get_string('editsummary'),'class'=>'editsumm'));
             }
 
             if ($this->tcsettings['showsectionsummary'] == 1) {
@@ -422,9 +422,9 @@ class format_topcoll_renderer extends format_section_renderer_base {
 
             if ($this->userisediting && has_capability('moodle/course:update', $context)) {
                 $url = new moodle_url('/course/editsection.php', array('id' => $section->id, 'sr' => $sectionreturn));
-                $o .= html_writer::link($url, html_writer::empty_tag('img', array('src' => $this->output->pix_url('t/edit'),
-                                    'class' => 'iconsmall edit', 'alt' => get_string('edit'))),
-                                    array('title' => get_string('editsummary')));
+                $o.= html_writer::link($url, html_writer::empty_tag('img', array('src' => $this->output->pix_url('t/edit'),
+                                    'class' => 'iconsmall edit', 'alt' => get_string('edit'))).get_string('edit'),
+                                    array('title' => get_string('editsummary'),'class'=>'editsumm'));
             }
             $o .= html_writer::end_tag('div');
 

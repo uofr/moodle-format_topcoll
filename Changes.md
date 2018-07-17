@@ -1,5 +1,55 @@
 Version Information
 ===================
+Version 3.4.0.3
+  1. Put back 'numsections'.
+
+Version 3.4.0.2
+  1. Fix colour popup form element not rendering correctly in Boost theme.
+  2. Apply MDL-60241 course: General section always visible.
+  3. Support Privacy API.
+  4. Fix #40.
+
+Version 3.4.0.1
+  1. First beta version for M3.4.
+
+Version 3.3.1.1
+  1. Revert MDL-55074 by applying MDL-57412 - #30.
+  2. Fix CONTRIB-7056 - Edit menu cut off for some activities when using collapsed topics and boost.
+  3. Apply MDL-35628 - thanks to Skylar Kelty for the patch.
+
+Version 3.3.1.0
+  1. Fix missing reset course settings.
+  2. Add 'numsections' coping restore code from Topics format.
+  3. Fix toggle all cursor.
+  4. Add folder icon from /pix/f.
+  5. One section only.
+  6. Remove 'coursedisplay' setting favour of combining the two and adding a link on the right of the toggle.
+  7. Add opactity option for all four toggle colour settings.
+  8. private or protected - #31.
+  9. Fix Boost theme :target CSS conflict.
+
+Version 3.3.0.2
+  1. Make the 'readme' course setting only display and not store in the database, thus regenerate and not broken in the
+     course backup.
+  2. Fix not being able to tab to colour settings.
+  3. Implement MDL-4782.  Ref: 'https://docs.moodle.org/33/en/Stealth_activities' - 'allowstealth' admin setting.
+  4. Apply MDL-55074 - #30.
+
+Version 3.3.0.1
+  1. Apply MDL-58637.
+  2. pix_url to pix_icon.
+  3. Fix section move name not changing.
+  4. Apply MDL-57769.
+
+Version 3.2.1.0
+  1. Remove old 'format_topcoll_delete_course' function and replace with '\core\event\course_content_deleted' event.
+  2. Add Boost theme specific style sheet - not the best of solutions but only one at the moment I can think of.
+
+Version 3.2.0.1
+  1. Detect 'Boost' theme as different grid system and no way core would put in code for a contributed plugin.
+  2. Update Travis CI.
+  3. Update tests for M3.2 and 'boost' as the new default theme.  Note: Need to write 'Boost' specific tests.
+
 Version 3.1.1.3
   1. Improve and fix responsive column layouts.
   2. Cursor style in M3.1 when not editing - #25.

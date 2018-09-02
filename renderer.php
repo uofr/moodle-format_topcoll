@@ -430,7 +430,9 @@ class format_topcoll_renderer extends format_section_renderer_base {
                 $rightcontent .= html_writer::link($url,
                     $this->output->pix_icon('t/edit', get_string('edit')),
                         array('title' => get_string('editsection', 'format_topcoll'), 'class' => 'tceditsection editsumm'));
-            }*/
+            }
+						*/
+						
             $rightcontent .= $this->section_right_content($section, $course, $onsectionpage);
 
             if ($this->rtl) {
@@ -493,15 +495,16 @@ class format_topcoll_renderer extends format_section_renderer_base {
                 'id' => 'toggledsection-' . $section->section)
             );
 						
-						/*
+						
             if ($this->userisediting && has_capability('moodle/course:update', $context)) {
                 $url = new moodle_url('/course/editsection.php', array('id' => $section->id, 'sr' => $sectionreturn));
                 $o .= html_writer::link($url,
-                    $this->output->pix_icon('t/edit', get_string('edit')),
-                    array('title' => get_string('editsection', 'format_topcoll'),'class'=>'editsumm')
+                    //$this->output->pix_icon('t/edit', get_string('edit')),
+                    get_string('editsection'),
+                    array('title' => get_string('editsection'),'class'=>'editsumm')
                 );
             }
-						*/
+						
 						
             if ($this->tcsettings['showsectionsummary'] == 1) {
                 $o .= $this->section_summary_container($section);
@@ -517,15 +520,16 @@ class format_topcoll_renderer extends format_section_renderer_base {
             $o .= html_writer::start_tag('div', array('class' => 'summary'));
             $o .= $this->format_summary_text($section);
 						
-						/*
+						
             if ($this->userisediting && has_capability('moodle/course:update', $context)) {
                 $url = new moodle_url('/course/editsection.php', array('id' => $section->id, 'sr' => $sectionreturn));
                 $o .= html_writer::link($url,
-                    $this->output->pix_icon('t/edit', get_string('edit')),
-                    array('title' => get_string('editsection', 'format_topcoll'),'class'=>'editsumm')
+                    //$this->output->pix_icon('t/edit', get_string('edit')),
+                    get_string('editsection'),
+                    array('title' => get_string('editsection'),'class'=>'editsumm')
                 );
             }
-						*/
+						
             $o .= html_writer::end_tag('div');
         }
         return $o;

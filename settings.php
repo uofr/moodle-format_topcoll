@@ -108,7 +108,6 @@ if ($ADMIN->fulltree) {
         1 => new lang_string('one', 'format_topcoll'), // Default.
         2 => new lang_string('two', 'format_topcoll'), // Two.
         3 => new lang_string('three', 'format_topcoll'), // Three.
-        4 => new lang_string('four', 'format_topcoll')   // Four.
     );
     $settings->add(new admin_setting_configselect($name, $title, $description, $default, $choices));
 
@@ -116,7 +115,7 @@ if ($ADMIN->fulltree) {
     $name = 'format_topcoll/defaultlayoutcolumnorientation';
     $title = get_string('defaultlayoutcolumnorientation', 'format_topcoll');
     $description = get_string('defaultlayoutcolumnorientation_desc', 'format_topcoll');
-    $default = 2;
+    $default = 1;
     $choices = array(
         1 => new lang_string('columnvertical', 'format_topcoll'),
         2 => new lang_string('columnhorizontal', 'format_topcoll') // Default.

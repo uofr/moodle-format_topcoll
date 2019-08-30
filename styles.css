@@ -585,10 +585,11 @@ body.format-topcoll.editing.dir-rtl ul.ctopics .section .activity .contentwithou
 body.format-topcoll.editing.dir-rtl ul.ctopics .section .activity .activityinstance {
     padding-left: 0;
 }
-
+/*
 body.format-topcoll.editing ul.ctopics .section .activity .actions {
     position: relative;
 }
+*/
 
 body.format-topcoll.editing #region-main ul.ctopics .moodle-actionmenu ul.menubar {
     display: none;

@@ -22,8 +22,7 @@
  * Toggles are persistent on a per browser session per course basis but can be made to persist longer by a small
  * code change. Full installation instructions, code adaptions and credits are included in the 'Readme.md' file.
  *
- * @package    course/format
- * @subpackage topcoll
+ * @package    format_topcoll
  * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2012-onwards G J Barnard in respect to modifications of standard topics format.
  * @author     G J Barnard - {@link http://moodle.org/user/profile.php?id=442195}
@@ -176,7 +175,15 @@ class format_topcoll extends format_base {
         return $o;
     }
 
-    public function get_section_dates($section, $course, $tcsettings) {
+    public function get_section_dates($section, $course = null, $tcsettings = null) {
+        if (empty($tcsettings) && empty($course)) {
+            return $this->format_topcoll_get_section_dates($section, $this->get_course());
+        }
+
+        if (empty($tcsettings)) {
+            $tcsettings = $this->get_settings();
+        }
+
         $dateformat = get_string('strftimedateshort');
         $o = '';
         if ($tcsettings['layoutstructure'] == 5) {
@@ -267,6 +274,8 @@ class format_topcoll extends format_base {
      * @return array This will be passed in ajax respose
      */
     public function ajax_section_move() {
+        global $PAGE;
+
         $titles = array();
         $current = -1;  // MDL-33546.
         $weekformat = false;
@@ -277,11 +286,12 @@ class format_topcoll extends format_base {
         }
         $course = $this->get_course();
         $modinfo = get_fast_modinfo($course);
-        if ($sections = $modinfo->get_section_info_all()) {
-            foreach ($sections as $number => $section) {
-                $titles[$number] = $this->get_topcoll_section_name($course, $section, true);
+        $formatrenderer = $PAGE->get_renderer('format_topcoll');
+        if ($formatrenderer && $sections = $modinfo->get_section_info_all()) {
+            foreach ($sections as $sectionnumber => $section) {
+                $titles[$sectionnumber] = $formatrenderer->section_title($section, null); // Course not needed.
                 if (($weekformat == true) && ($this->is_section_current($section))) {
-                    $current = $number;  // Only set if a week based course to keep the current week in the same place.
+                    $current = $sectionnumber;  // Only set if a week based course to keep the current week in the same place.
                 }
             }
         }
@@ -404,6 +414,14 @@ class format_topcoll extends format_base {
                 ),
                 'layoutcolumnorientation' => array(
                     'default' => get_config('format_topcoll', 'defaultlayoutcolumnorientation'),
+                    'type' => PARAM_INT,
+                ),
+                'toggleallenabled' => array(
+                    'default' => get_config('format_topcoll', 'defaulttoggleallenabled'),
+                    'type' => PARAM_INT,
+                ),
+                'viewsinglesectionenabled' => array(
+                    'default' => get_config('format_topcoll', 'defaultviewsinglesectionenabled'),
                     'type' => PARAM_INT,
                 ),
                 'togglealignment' => array(
@@ -588,6 +606,26 @@ class format_topcoll extends format_base {
                               2 => new lang_string('columnhorizontal', 'format_topcoll')) // Default.
                     )
                 );
+                $courseformatoptionsedit['toggleallenabled'] = array(
+                    'label' => new lang_string('settoggleallenabled', 'format_topcoll'),
+                    'help' => 'settoggleallenabled',
+                    'help_component' => 'format_topcoll',
+                    'element_type' => 'select',
+                    'element_attributes' => array(
+                        array(1 => new lang_string('no'),
+                              2 => new lang_string('yes'))
+                    )
+                );
+                $courseformatoptionsedit['viewsinglesectionenabled'] = array(
+                    'label' => new lang_string('setviewsinglesectionenabled', 'format_topcoll'),
+                    'help' => 'setviewsinglesectionenabled',
+                    'help_component' => 'format_topcoll',
+                    'element_type' => 'select',
+                    'element_attributes' => array(
+                        array(1 => new lang_string('no'),
+                              2 => new lang_string('yes'))
+                    )
+                );
                 $courseformatoptionsedit['toggleiconposition'] = array(
                     'label' => new lang_string('settoggleiconposition', 'format_topcoll'),
                     'help' => 'settoggleiconposition',
@@ -627,6 +665,10 @@ class format_topcoll extends format_base {
                     'label' => get_config('format_topcoll', 'defaultlayoutcolumns'), 'element_type' => 'hidden');
                 $courseformatoptionsedit['layoutcolumnorientation'] = array(
                     'label' => get_config('format_topcoll', 'defaultlayoutcolumnorientation'), 'element_type' => 'hidden');
+                $courseformatoptionsedit['toggleallenabled'] = array(
+                    'label' => get_config('format_topcoll', 'defaulttoggleallenabled'), 'element_type' => 'hidden');
+                $courseformatoptionsedit['viewsinglesectionenabled'] = array(
+                    'label' => get_config('format_topcoll', 'defaultviewsinglesectionenabled'), 'element_type' => 'hidden');
                 $courseformatoptionsedit['toggleiconposition'] = array(
                     'label' => get_config('format_topcoll', 'defaulttoggleiconposition'), 'element_type' => 'hidden');
                 $courseformatoptionsedit['onesection'] = array(
@@ -778,7 +820,7 @@ class format_topcoll extends format_base {
                     'label' => get_config('format_topcoll', 'defaulttgfgopacity'), 'element_type' => 'hidden');
                 $courseformatoptionsedit['toggleforegroundhovercolour'] = array(
                     'label' => $defaulttgfghvrcolour, 'element_type' => 'hidden');
-                $courseformatoptionsedit['toggleforegroundhoveopacity'] = array(
+                $courseformatoptionsedit['toggleforegroundhoveropacity'] = array(
                     'label' => get_config('format_topcoll', 'defaulttgfghvropacity'), 'element_type' => 'hidden');
                 $courseformatoptionsedit['togglebackgroundcolour'] = array(
                     'label' => $defaulttgbgcolour, 'element_type' => 'hidden');
@@ -786,7 +828,7 @@ class format_topcoll extends format_base {
                     'label' => get_config('format_topcoll', 'defaulttgbgopacity'), 'element_type' => 'hidden');
                 $courseformatoptionsedit['togglebackgroundhovercolour'] = array(
                     'label' => $defaulttgbghvrcolour, 'element_type' => 'hidden');
-                $courseformatoptionsedit['togglebackgroundhoveopacity'] = array(
+                $courseformatoptionsedit['togglebackgroundhoveropacity'] = array(
                     'label' => get_config('format_topcoll', 'defaulttgbghvropacity'), 'element_type' => 'hidden');
             }
             $readme = new moodle_url('/course/format/topcoll/Readme.md');
@@ -811,7 +853,7 @@ class format_topcoll extends format_base {
      * @return array array of references to the added form elements
      */
     public function create_edit_form_elements(&$mform, $forsection = false) {
-        global $CFG, $OUTPUT, $USER;
+        global $CFG, $OUTPUT, $PAGE, $USER;
         MoodleQuickForm::registerElementType('tccolourpopup', "$CFG->dirroot/course/format/topcoll/js/tc_colourpopup.php",
                                              'MoodleQuickForm_tccolourpopup');
 
@@ -845,57 +887,119 @@ class format_topcoll extends format_base {
         $elements[] = $mform->addElement('header', 'ctreset', get_string('ctreset', 'format_topcoll'));
         $mform->addHelpButton('ctreset', 'ctreset', 'format_topcoll', '', true);
 
+        $bsfour = false;
+        if (strcmp($PAGE->theme->name, 'boost') === 0) {
+            $bsfour = true;
+        } else if (!empty($PAGE->theme->parents)) {
+            if (in_array('boost', $PAGE->theme->parents) === true) {
+                $bsfour = true;
+            }
+        } else if (strcmp($PAGE->theme->name, 'foundation') === 0) {
+            $bsfour = true;
+        }
+
         $resetelements = array();
-        $checkboxname = get_string('resetdisplayinstructions', 'format_topcoll').
-            $OUTPUT->help_icon('resetdisplayinstructions', 'format_topcoll');
-        $resetelements[] =& $mform->createElement('checkbox', 'resetdisplayinstructions', '', $checkboxname);
+        if ($bsfour) {
+            $checkboxname = get_string('resetdisplayinstructions', 'format_topcoll');
+            $resetelements[] = & $mform->createElement('checkbox', 'resetdisplayinstructions', '', $checkboxname);
+            $resetelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetdisplayinstructions', 'format_topcoll'));
+        } else {
+            $checkboxname = get_string('resetdisplayinstructions', 'format_topcoll').
+                $OUTPUT->help_icon('resetdisplayinstructions', 'format_topcoll');
+            $resetelements[] =& $mform->createElement('checkbox', 'resetdisplayinstructions', '', $checkboxname);
+        }
 
         if ($changelayout) {
-            $checkboxname = get_string('resetlayout', 'format_topcoll').$OUTPUT->help_icon('resetlayout', 'format_topcoll');
-            $resetelements[] =& $mform->createElement('checkbox', 'resetlayout', '', $checkboxname);
+            if ($bsfour) {
+                $checkboxname = get_string('resetlayout', 'format_topcoll');
+                $resetelements[] = & $mform->createElement('checkbox', 'resetlayout', '', $checkboxname);
+                $resetelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetlayout', 'format_topcoll'));
+            } else {
+                $checkboxname = get_string('resetlayout', 'format_topcoll').$OUTPUT->help_icon('resetlayout', 'format_topcoll');
+                $resetelements[] =& $mform->createElement('checkbox', 'resetlayout', '', $checkboxname);
+            }
         }
 
         if ($changecolour) {
-            $checkboxname = get_string('resetcolour', 'format_topcoll').$OUTPUT->help_icon('resetcolour', 'format_topcoll');
-            $resetelements[] =& $mform->createElement('checkbox', 'resetcolour', '', $checkboxname);
+            if ($bsfour) {
+                $checkboxname = get_string('resetcolour', 'format_topcoll');
+                $resetelements[] = & $mform->createElement('checkbox', 'resetcolour', '', $checkboxname);
+                $resetelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetcolour', 'format_topcoll'));
+            } else {
+                $checkboxname = get_string('resetcolour', 'format_topcoll').$OUTPUT->help_icon('resetcolour', 'format_topcoll');
+                $resetelements[] =& $mform->createElement('checkbox', 'resetcolour', '', $checkboxname);
+            }
         }
 
         if ($changetogglealignment) {
-            $checkboxname = get_string('resettogglealignment', 'format_topcoll').
-                $OUTPUT->help_icon('resettogglealignment', 'format_topcoll');
-            $resetelements[] =& $mform->createElement('checkbox', 'resettogglealignment', '', $checkboxname);
+            if ($bsfour) {
+                $checkboxname = get_string('resettogglealignment', 'format_topcoll');
+                $resetelements[] = & $mform->createElement('checkbox', 'resettogglealignment', '', $checkboxname);
+                $resetelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resettogglealignment', 'format_topcoll'));
+            } else {
+                $checkboxname = get_string('resettogglealignment', 'format_topcoll').
+                    $OUTPUT->help_icon('resettogglealignment', 'format_topcoll');
+                $resetelements[] =& $mform->createElement('checkbox', 'resettogglealignment', '', $checkboxname);
+            }
         }
 
         if ($changetoggleiconset) {
-            $checkboxname = get_string('resettoggleiconset', 'format_topcoll').
-                $OUTPUT->help_icon('resettoggleiconset', 'format_topcoll');
-            $resetelements[] =& $mform->createElement('checkbox', 'resettoggleiconset', '', $checkboxname);
+            if ($bsfour) {
+                $checkboxname = get_string('resettoggleiconset', 'format_topcoll');
+                $resetelements[] = & $mform->createElement('checkbox', 'resettoggleiconset', '', $checkboxname);
+                $resetelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resettoggleiconset', 'format_topcoll'));
+            } else {
+                $checkboxname = get_string('resettoggleiconset', 'format_topcoll').
+                    $OUTPUT->help_icon('resettoggleiconset', 'format_topcoll');
+                $resetelements[] =& $mform->createElement('checkbox', 'resettoggleiconset', '', $checkboxname);
+            }
         }
         $elements[] = $mform->addGroup($resetelements, 'resetgroup', get_string('resetgrp', 'format_topcoll'), null, false);
 
         if ($resetall) {
             $resetallelements = array();
 
-            $checkboxname = get_string('resetalldisplayinstructions', 'format_topcoll').
-                $OUTPUT->help_icon('resetalldisplayinstructions', 'format_topcoll');
-            $resetallelements[] =& $mform->createElement('checkbox', 'resetalldisplayinstructions', '', $checkboxname);
+            if ($bsfour) {
+                $checkboxname = get_string('resetalldisplayinstructions', 'format_topcoll');
+                $resetallelements[] = & $mform->createElement('checkbox', 'resetalldisplayinstructions', '', $checkboxname);
+                $resetallelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetalldisplayinstructions', 'format_topcoll'));
 
-            $checkboxname = get_string('resetalllayout', 'format_topcoll').
-                $OUTPUT->help_icon('resetalllayout', 'format_topcoll');
-            $resetallelements[] =& $mform->createElement('checkbox', 'resetalllayout', '', $checkboxname);
+                $checkboxname = get_string('resetalllayout', 'format_topcoll');
+                $resetallelements[] = & $mform->createElement('checkbox', 'resetalllayout', '', $checkboxname);
+                $resetallelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetalllayout', 'format_topcoll'));
 
-            $checkboxname = get_string('resetallcolour', 'format_topcoll').
-                $OUTPUT->help_icon('resetallcolour', 'format_topcoll');
-            $resetallelements[] =& $mform->createElement('checkbox', 'resetallcolour', '', $checkboxname);
+                $checkboxname = get_string('resetallcolour', 'format_topcoll');
+                $resetallelements[] = & $mform->createElement('checkbox', 'resetallcolour', '', $checkboxname);
+                $resetallelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetallcolour', 'format_topcoll'));
 
-            $checkboxname = get_string('resetalltogglealignment', 'format_topcoll').
-                $OUTPUT->help_icon('resetalltogglealignment', 'format_topcoll');
-            $resetallelements[] =& $mform->createElement('checkbox', 'resetalltogglealignment', '', $checkboxname);
+                $checkboxname = get_string('resetalltogglealignment', 'format_topcoll');
+                $resetallelements[] = & $mform->createElement('checkbox', 'resetalltogglealignment', '', $checkboxname);
+                $resetallelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetalltogglealignment', 'format_topcoll'));
 
-            $checkboxname = get_string('resetalltoggleiconset', 'format_topcoll').
-                $OUTPUT->help_icon('resetalltoggleiconset', 'format_topcoll');
-            $resetallelements[] =& $mform->createElement('checkbox', 'resetalltoggleiconset', '', $checkboxname);
+                $checkboxname = get_string('resetalltoggleiconset', 'format_topcoll');
+                $resetallelements[] = & $mform->createElement('checkbox', 'resetalltoggleiconset', '', $checkboxname);
+                $resetallelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetalltoggleiconset', 'format_topcoll'));
+            } else {
+                $checkboxname = get_string('resetalldisplayinstructions', 'format_topcoll').
+                    $OUTPUT->help_icon('resetalldisplayinstructions', 'format_topcoll');
+                $resetallelements[] =& $mform->createElement('checkbox', 'resetalldisplayinstructions', '', $checkboxname);
 
+                $checkboxname = get_string('resetalllayout', 'format_topcoll').
+                    $OUTPUT->help_icon('resetalllayout', 'format_topcoll');
+                $resetallelements[] =& $mform->createElement('checkbox', 'resetalllayout', '', $checkboxname);
+
+                $checkboxname = get_string('resetallcolour', 'format_topcoll').
+                    $OUTPUT->help_icon('resetallcolour', 'format_topcoll');
+                $resetallelements[] =& $mform->createElement('checkbox', 'resetallcolour', '', $checkboxname);
+
+                $checkboxname = get_string('resetalltogglealignment', 'format_topcoll').
+                    $OUTPUT->help_icon('resetalltogglealignment', 'format_topcoll');
+                $resetallelements[] =& $mform->createElement('checkbox', 'resetalltogglealignment', '', $checkboxname);
+
+                $checkboxname = get_string('resetalltoggleiconset', 'format_topcoll').
+                    $OUTPUT->help_icon('resetalltoggleiconset', 'format_topcoll');
+                $resetallelements[] =& $mform->createElement('checkbox', 'resetalltoggleiconset', '', $checkboxname);
+            }
             $elements[] = $mform->addGroup($resetallelements, 'resetallgroup',
                 get_string('resetallgrp', 'format_topcoll'), null, false);
         }
@@ -1205,6 +1309,8 @@ class format_topcoll extends format_base {
             $updatedata['layoutstructure'] = get_config('format_topcoll', 'defaultlayoutstructure');
             $updatedata['layoutcolumns'] = get_config('format_topcoll', 'defaultlayoutcolumns');
             $updatedata['layoutcolumnorientation'] = get_config('format_topcoll', 'defaultlayoutcolumnorientation');
+            $updatedata['toggleallenabled'] = get_config('format_topcoll', 'defaulttoggleallenabled');
+            $updatedata['viewsinglesectionenabled'] = get_config('format_topcoll', 'defaultviewsinglesectionenabled');
             $updatedata['toggleiconposition'] = get_config('format_topcoll', 'defaulttoggleiconposition');
             $updatedata['onesection'] = get_config('format_topcoll', 'defaultonesection');
             $updatedata['showsectionsummary'] = get_config('format_topcoll', 'defaultshowsectionsummary');
@@ -1279,6 +1385,8 @@ class format_topcoll extends format_base {
             // Defaults taken from 'settings.php'.
             $data['displayinstructions'] = get_config('format_topcoll', 'defaultdisplayinstructions');
             $data['layoutcolumnorientation'] = get_config('format_topcoll', 'defaultlayoutcolumnorientation');
+            $data['toggleallenabled'] = get_config('format_topcoll', 'defaulttoggleallenabled');
+            $data['viewsinglesectionenabled'] = get_config('format_topcoll', 'defaultviewsinglesectionenabled');
             $data['showsectionsummary'] = get_config('format_topcoll', 'defaultshowsectionsummary');
             $data['togglealignment'] = get_config('format_topcoll', 'defaulttogglealignment');
             $data['toggleallhover'] = get_config('format_topcoll', 'defaulttoggleallhover');

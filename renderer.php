@@ -569,13 +569,14 @@ class format_topcoll_renderer extends format_section_renderer_base {
             } else {
                 $rightcontent = '';
                 $context = context_course::instance($course->id);
+				// Edit menu added elsewhere
+					/*
                 if (($section->section != 0) && $this->userisediting && has_capability('moodle/course:update', $context)) {
                     $url = new moodle_url('/course/editsection.php', array('id' => $section->id, 'sr' => $sectionreturn));
-
                     $rightcontent .= html_writer::link($url,
                         $this->output->pix_icon('t/edit', get_string('edit')),
                             array('title' => get_string('editsection', 'format_topcoll'), 'class' => 'tceditsection'));
-                }
+                }*/
                 $rightcontent .= $this->section_right_content($section, $course, $onsectionpage);
                 $o .= html_writer::tag('div', $rightcontent, array('class' => 'right side'));
             }

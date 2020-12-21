@@ -1,11 +1,33 @@
 Version Information
 ===================
-Version 3.6.1.0
+Version 3.8.1.2 - TBD
+  1. Fix issue where 'numsections' is set to '0' on restore of backup file that does not have it set.
+  2. Fix logic in restore of backup file for 'numsections' - #73.
+  3. Colour fixes for Adaptable theme version 2.3.1.
+
+Version 3.8.1.1 - 29/06/2020
+  1. Added 'Course page further information' functionality from Adaptable theme.
+
+Version 3.8.1.0 - 31/03/2020
+  1. Fix 'Section edit link is moved on top of previous sections edit link when deleting a section' - CONTRIB-7957.
+  2. Fix 'Multiple columns changes to one column for students when last section is set to hidden' - CONTRIB-8008.
+  3. Fix current section bar overlap.
+
+Version 3.8.0.1
+  1. Fix Collapsed topics format zoom issue - CONTRIB-7893.
+  2. Adjust position of 'view only' icon.
+  3. More accessible open all / close all - #67.
+  4. Moodle 3.8 version based on V3.7.1.1.
+
+Version 3.7.1.0
   1. Add missing Moodle define.
   2. Fix "Collapsed Topic Content/EditMenu Overlap" - https://moodle.org/mod/forum/discuss.php?d=388969.
   3. Fix error with analytic - get_section_dates function - thanks to https://github.com/tuanngocnguyen for the patch - #65.
   4. Improve accessibility by having the 'left', 'content' and 'right' section areas in that order rather than 'left', 'right' and 'content'
      which makes the tab order wrong.
+
+Version 3.7.0.1
+  1. Beta version for Moodle 3.7 based on 3.6.0.3.
 
 Version 3.6.0.3
   1. Apply MDL-64819 - #61.

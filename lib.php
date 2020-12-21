@@ -205,6 +205,32 @@ class format_topcoll extends format_base {
     }
 
     /**
+     * What structure collection type are we using?
+     *
+     * @return string Structure collection type.
+     */
+    public function get_structure_collection_type() {
+        $tcsettings = $this->get_settings();
+        $o = '';
+
+        switch($tcsettings['layoutstructure']) {
+            case 1:
+            case 4:
+                $o = get_string('layoutstructuretopics', 'format_topcoll');
+            break;
+            case 2:
+            case 3:
+                $o = get_string('layoutstructureweeks', 'format_topcoll');
+            break;
+            case 5:
+                $o = get_string('layoutstructuredays', 'format_topcoll');
+            break;
+        }
+
+        return $o;
+    }
+
+    /**
      * The URL to use for the specified course (with section)
      *
      * @param int|stdClass $section Section object from database or just field course_sections.section
@@ -1393,6 +1419,21 @@ class format_topcoll extends format_base {
             $data['toggleiconposition'] = get_config('format_topcoll', 'defaulttoggleiconposition');
             $data['toggleiconset'] = get_config('format_topcoll', 'defaulttoggleiconset');
         }
+        $this->update_course_format_options($data);
+
+        $this->courseid = $currentcourseid;
+    }
+
+    /**
+     * Restores the numsections if was not in the backup.
+     * @param int $courseid If not 0, then a specific course to reset.
+     * @param int $numsections The number of sections.
+     */
+    public function restore_numsections($courseid, $numsections) {
+        $currentcourseid = $this->courseid;  // Save for later - stack data model.
+        $this->courseid = $courseid;
+
+        $data = array('numsections' => $numsections);
         $this->update_course_format_options($data);
 
         $this->courseid = $currentcourseid;

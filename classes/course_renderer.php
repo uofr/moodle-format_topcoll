@@ -185,9 +185,17 @@ class format_topcoll_course_renderer extends \core_course_renderer {
         $cmname = $this->course_section_cm_name($mod, $displayoptions);
 
         if (!empty($cmname)) {
+            // UR HACK: add $linkclasses to actvityinstance div
+            list($linkclasses, $textclasses) = $this->course_section_cm_classes($mod);
+            
             // Start the div for the activity title, excluding the edit icons.
             $output .= html_writer::start_tag('div', array('class' => 'activityinstance'));
             $output .= $cmname;
+
+            // UR HACK: move hide / show icons
+            if ($this->page->user_is_editing()) {
+                $output .= ' ' . course_get_hideshow_action($mod, $sectionreturn);
+            }
 
             // Module can put text after the link (e.g. forum unread).
             $output .= $mod->afterlink;

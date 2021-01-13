@@ -791,9 +791,8 @@ body.jsenabled #toggle-all {
 }
 
 .format-topcoll .ct-activity-due-date {
-    background-color: #555;
+    background-color: #fffcd5;
     border-radius: 0.5em;
-    color: #fff;
     font-size: 0.9em;
     font-weight: 500;
     line-height: 3em;
@@ -803,7 +802,6 @@ body.jsenabled #toggle-all {
 }
 
 .format-topcoll .ct-activity-due-date a {
-    color: #fff;
  }
 
 .format-topcoll .ct-activity-mod-feedback {
@@ -815,15 +813,15 @@ body.jsenabled #toggle-all {
 }
 
 .format-topcoll .ct-activity-date-overdue {
-    background-color: #ee0000;
+    background-color: #f8d7da;
 }
 
 .format-topcoll .ct-activity-date-submitted {
-    background-color: #00cc00;
+    background-color: #def1de;
 }
 
 .format-topcoll .ct-activity-date-nearly-due {
-    background-color: #f79100;
+    background-color: #ffe0bf;
 }
 
 .format-topcoll .ct-activity-due-date .icon,

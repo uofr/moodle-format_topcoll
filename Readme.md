@@ -5,32 +5,30 @@ Topic based course format with an individual 'toggle' for each topic except 0.
 If you find an issue with the format, please see the 'Reporting Issues' section below or contact your Moodle administrator.
 
 This file contains general information about the format.  If you're reading this as an educator then you can learn about the format
-from the documentation on http://docs.moodle.org/39/en/Collapsed_Topics_course_format.  If you get stuck and your Moodle support
+from the documentation on http://docs.moodle.org/400/en/Collapsed_Topics_course_format.  If you get stuck and your Moodle support
 are unable to help / not sure what to do, then please go to https://moodle.org/mod/forum/view.php?id=47.  If you like the format,
 then please do spread the word to other educators.  The main page for the format is https://moodle.org/plugins/format_topcoll.
 
-[![Build Status](https://travis-ci.org/gjb2048/moodle-format_topcoll.svg?branch=master)](https://travis-ci.org/gjb2048/moodle-format_topcoll)
-
 Required version of Moodle
 ==========================
-This version works with Moodle 3.10 version 2020110900.00 (Build: 20201109) and above within the 3.10 branch until the
+This version works with Moodle 4.0dev+ version 2021102200.00 (Build: 20211022) and above within the master branch until the
 next release.
 
 Please ensure that your hardware and software complies with 'Requirements' in 'Installing Moodle' on
-'docs.moodle.org/310/en/Installing_Moodle'
+'docs.moodle.org/40/en/Installing_Moodle'
 
 Downloads and documentation
 ===========================
 The primary source for downloading this branch of the format is https://moodle.org/plugins/view.php?plugin=format_topcoll
-with 'Select Moodle version:' set at 'Moodle 3.10'.
+with 'Select Moodle version:' set at 'Moodle 4.0'.
 
-The secondary source is a tagged version with the v3.10 prefix on https://github.com/gjb2048/moodle-format_topcoll/tags
+The secondary source is a tagged version with the v4.0 prefix on https://github.com/gjb2048/moodle-format_topcoll/tags
 
 If you download from the development area - https://github.com/gjb2048/moodle-format_topcoll/ - consider that
 the code is unstable and not for use in production environments.  This is because I develop the next version in stages
 and use GitHub as a means of backup.  Therefore the code is not finished, subject to alteration and requires testing.
 
-Documented on http://docs.moodle.org/310/en/Collapsed_Topics_course_format
+Documented on http://docs.moodle.org/400/en/Collapsed_Topics_course_format
 
 Bespoke changes
 ===============
@@ -207,7 +205,7 @@ the 'toggle all' functionality.  For example:
         background-image: url([[pix:format_topcoll|arrow_right]]);
     }
 
-    #toggle-all .content .toggle-arrow h4 span.off {
+    #toggle-all .content .toggle-arrow .toggle-all.off {
         background-image: url([[pix:format_topcoll|arrow_down]]); 
     }
 

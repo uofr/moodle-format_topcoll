@@ -23,59 +23,38 @@
  * code change. Full installation instructions, code adaptions and credits are included in the 'Readme.txt' file.
  *
  * @package    format_topcoll
+ * @category   cache
  * @version    See the value of '$plugin->version' in version.php.
- * @copyright  &copy; 2012-onwards G J Barnard in respect to modifications of standard topics format.
+ * @copyright  &copy; 2021-onwards G J Barnard.
  * @author     G J Barnard - gjbarnard at gmail dot com and {@link http://moodle.org/user/profile.php?id=442195}
  * @link       http://docs.moodle.org/en/Collapsed_Topics_course_format
  * @license    http://www.gnu.org/copyleft/gpl.html GNU Public License
  *
  */
 
-defined('MOODLE_INTERNAL') || die();
+defined('MOODLE_INTERNAL') || die;
 
-$capabilities = array(
-    'format/topcoll:changelayout' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => array(
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
+$definitions = array(
+    // Caches student roles.
+    'activitystudentrolescache' => array(
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'staticacceleration' => true,
+        'staticaccelerationsize' => 2
     ),
-
-    'format/topcoll:changecolour' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => array(
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
+    // Caches the number of 'students' who can access a given module on a given course.
+    'activitymodulecountcache' => array(
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'staticacceleration' => true
     ),
-
-    'format/topcoll:changetogglealignment' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => array(
-        'editingteacher' => CAP_ALLOW,
-        'manager' => CAP_ALLOW
-        )
-    ),
-
-    'format/topcoll:changetoggleiconset' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => array(
-        'editingteacher' => CAP_ALLOW,
-        'manager' => CAP_ALLOW
-        )
-    ),
-
-    'format/topcoll:changeactivitymeta' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => array(
-        'editingteacher' => CAP_ALLOW,
-        'manager' => CAP_ALLOW
-        )
+    // Caches the ids of the 'students' on a given course.
+    'activitystudentscache' => array(
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'staticacceleration' => true
     )
 );

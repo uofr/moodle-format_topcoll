@@ -121,6 +121,39 @@ $string['showadditionalmoddata'] = 'Show additional information for: {$a} in the
 $string['showadditionalmoddata_help'] = 'Allow all users to see the activity deadline and users with grading permission to see the number of submissions on the course page for activities.';
 $string['defaultshowadditionalmoddata'] = 'Default course \'Show additional information\' if not already set';
 $string['defaultshowadditionalmoddatadesc'] = 'If an activity is set at site level (below) to show additional information then this setting states the default state of the course specific instance of it.';
+$string['resetactivitymeta'] = 'Additional module information';
+$string['resetallactivitymeta'] = 'All additional module information';
+$string['resetactivitymeta_help'] = 'Resets the additional module information to follow the site default value.';
+$string['resetallactivitymeta_help'] = 'Resets all the additional module information to follow the site default value.';
+
+$string['courseadditionalmoddatamaxstudents'] = 'Set the maximum number of students on a course that \'Show additional information\' will apply to';
+$string['courseadditionalmoddatamaxstudentsdesc'] = 'Additional information can take time to calculate, especially on large courses, so here you can set the maximum number of students that a couse can have for the functionality to show on that course.  Above that value, the \'Additional information\' will NOT be calculated or show regardless of the course settings!  A value of \'0\' means \'unlimited\'.';
+
+$string['courseadditionalmoddatastudentsinfo'] = 'Additional information status:';
+$string['courseadditionalmoddatastudentsinfounlimited'] = 'Additional information will show for the enabled activities for {$a} students.';
+$string['courseadditionalmoddatastudentsinfolimitedshow'] = 'Additional information will show for the enabled activities for {$a->students} students as the number does not exceed the maximum \'{$a->maxstudents}\' set by the administrator on the Collapsed Topics course format setting \'courseadditionalmoddatamaxstudents\'.';
+$string['courseadditionalmoddatastudentsinfolimitednoshow'] = 'Additional information will NOT show for the enabled activities for {$a->students} students as the number exceededs the maximum \'{$a->maxstudents}\' set by the administrator on the Collapsed Topics course format setting \'courseadditionalmoddatamaxstudents\'.';
+
+$string['coursesectionactivityfurtherinformation'] = 'Course page further information';
+$string['coursesectionactivityfurtherinformationassign'] = 'Show assignment information';
+$string['coursesectionactivityfurtherinformationassigndesc'] = 'Show assignment information.  For teachers / admins, show number of submissions.';
+$string['coursesectionactivityfurtherinformationquiz'] = 'Show quiz information';
+$string['coursesectionactivityfurtherinformationquizdesc'] = 'Show quiz information.  For teachers / admins, show number of submissions.';
+$string['coursesectionactivityfurtherinformationchoice'] = 'Show choice information';
+$string['coursesectionactivityfurtherinformationchoicedesc'] = 'Show choice information.  For teachers / admins, show number of submissions.';
+$string['coursesectionactivityfurtherinformationfeedback'] = 'Show feedback information';
+$string['coursesectionactivityfurtherinformationfeedbackdesc'] = 'Show feedback information.  For teachers / admins, show number of submissions.';
+$string['coursesectionactivityfurtherinformationforum'] = 'Show forum information';
+$string['coursesectionactivityfurtherinformationforumdesc'] = 'Show forum information.  For teachers / admins, show number of contributions when whole forum grading is on.';
+$string['coursesectionactivityfurtherinformationlesson'] = 'Show lesson information';
+$string['coursesectionactivityfurtherinformationlessondesc'] = 'Show lesson information.  For teachers / admins, show number of submissions.';
+$string['coursesectionactivityfurtherinformationdata'] = 'Show database information';
+$string['coursesectionactivityfurtherinformationdatadesc'] = 'Show data information.  For teachers / admins, show number of submissions.';
+
+$string['cachedef_activitystudentrolescache'] = 'Caches the student roles.';
+$string['cachedef_activitymodulecountcache'] = 'Caches the number of students who can access a given module on a given course.';
+$string['cachedef_activitystudentscache'] = 'Caches the ids of the students on a given course.';
+$string['cannotgetmodulecountcachelock'] = 'Cannot get module count cache lock for course id {$a}.';
 
 // Colour enhancement - Moodle Tracker CONTRIB-3529.
 $string['setcolour'] = 'Colour';
@@ -177,7 +210,7 @@ $string['right'] = 'Right';
 $string['resettogglealignment'] = 'Toggle alignment';
 $string['resetalltogglealignment'] = 'Toggle alignments';
 $string['resettogglealignment_help'] = 'Resets the toggle alignment to follow the site default value.';
-$string['resetalltogglealignment_help'] = 'Resets the toggle alignment to follow the site default value.';
+$string['resetalltogglealignment_help'] = 'Resets all the toggle alignment to follow the site default value.';
 
 // Icon position - CONTRIB-4470.
 $string['settoggleiconposition'] = 'Icon position';
@@ -365,6 +398,7 @@ $string['topcoll:changelayout'] = 'Change or reset the layout';
 $string['topcoll:changecolour'] = 'Change or reset the colour';
 $string['topcoll:changetogglealignment'] = 'Change or reset the toggle alignment';
 $string['topcoll:changetoggleiconset'] = 'Change or reset the toggle icon set';
+$string['topcoll:changeactivitymeta'] = 'Change or reset the activity meta';
 
 // Instructions.
 $string['instructions'] = 'Instructions: Clicking on the section name will show / hide the section.';
@@ -378,44 +412,18 @@ $string['resetdisplayinstructions_help'] = 'Resets the display instructions to f
 $string['resetalldisplayinstructions_help'] = 'Resets the display instructions to follow the site default value.';
 
 // Activity display *********************************.
-$string['answered'] = 'Answered';
-$string['attempted'] = 'Attempted';
-$string['contributed'] = 'Contributed';
-$string['draft'] = 'Not published to students';
-$string['due'] = 'Due {$a}';
-$string['expired'] = 'Expired';
 $string['feedbackavailable'] = 'Feedback available';
-$string['notanswered'] = 'Not answered';
-$string['notattempted'] = 'Not attempted';
-$string['notcontributed'] = 'Not contributed';
-$string['notopen'] = 'Not open';
-$string['notsubmitted'] = 'Not submitted';
-$string['overdue'] = 'Overdue';
-$string['reopened'] = 'Reopened';
-$string['submitted'] = 'Submitted';
-
 $string['xofyanswered'] = '{$a->completed} of {$a->participants} answered';
 $string['xofyattempted'] = '{$a->completed} of {$a->participants} attempted';
 $string['xofycontributed'] = '{$a->completed} of {$a->participants} contributed';
+$string['xofyposted'] = '{$a->completed} of {$a->participants} posted';
 $string['xofysubmitted'] = '{$a->completed} of {$a->participants} submitted';
+$string['xanswered'] = '{$a->completed} answered';
+$string['xattempted'] = '{$a->completed} attempted';
+$string['xcontributed'] = '{$a->completed} contributed';
+$string['xposted'] = '{$a->completed} posted';
+$string['xsubmitted'] = '{$a->completed} submitted';
 $string['xungraded'] = '{$a} ungraded';
-
-$string['checked'] = 'Checked';
-$string['warning'] = 'Warning';
-
-$string['coursesectionactivityfurtherinformation'] = 'Course page further information';
-$string['coursesectionactivityfurtherinformationassign'] = 'Show assignment information';
-$string['coursesectionactivityfurtherinformationassigndesc'] = 'Show assignment information, such as due date, submission status.  For teachers / admins, show number of submissions.';
-$string['coursesectionactivityfurtherinformationquiz'] = 'Show quiz information';
-$string['coursesectionactivityfurtherinformationquizdesc'] = 'Show quiz information, such as submission status.  For teachers / admins, show number of submissions.';
-$string['coursesectionactivityfurtherinformationchoice'] = 'Show choice information';
-$string['coursesectionactivityfurtherinformationchoicedesc'] = 'Show choice information, such as submission status.  For teachers / admins, show number of submissions.';
-$string['coursesectionactivityfurtherinformationfeedback'] = 'Show feedback information';
-$string['coursesectionactivityfurtherinformationfeedbackdesc'] = 'Show feedback information, such as submission status.  For teachers / admins, show number of submissions.';
-$string['coursesectionactivityfurtherinformationlesson'] = 'Show lesson information';
-$string['coursesectionactivityfurtherinformationlessondesc'] = 'Show lesson information, such as submission status.  For teachers / admins, show number of submissions.';
-$string['coursesectionactivityfurtherinformationdata'] = 'Show database information';
-$string['coursesectionactivityfurtherinformationdatadesc'] = 'Show data information, such as submission status.  For teachers / admins, show number of submissions.';
 
 // Duplicate section.
 $string['creatingsection'] = 'Creating new section';
@@ -434,3 +442,11 @@ $string['privacy:request:preference:toggle'] = 'The course id "{$a->name}" has t
 // Readme.
 $string['readme_title'] = 'Collapsed Topics read-me';
 $string['readme_desc'] = 'Please click on \'{$a->url}\' for lots more information about Collapsed Topics.';
+
+// Toggle Display Blocks.
+$string['defaultdisplayblocks'] = 'Blocks to display';
+$string['defaultdisplayblocks_desc'] = "Choose the blocks to display in the course.  Use the 'Ctrl' key in combination with the mouse to select more than one or none.";
+$string['defaultdisplayblocksloc'] = 'Block location for display';
+$string['defaultdisplayblocksloc_desc'] = "Choose the location for the blocks chosen above to display, pre or post side.";
+$string['sidepost'] = 'Post';
+$string['sidepre'] = 'Pre';

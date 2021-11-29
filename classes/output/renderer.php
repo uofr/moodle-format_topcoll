@@ -30,12 +30,20 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU Public License
  *
  */
+
+namespace format_topcoll\output;
+
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/course/format/renderer.php');
-require_once($CFG->dirroot . '/course/format/topcoll/lib.php');
+use completion_info;
+use context_course;
+use html_writer;
+use moodle_url;
 
-class format_topcoll_renderer extends format_section_renderer_base {
+require_once($CFG->dirroot.'/course/format/renderer.php'); // For format_section_renderer_base.
+require_once($CFG->dirroot.'/course/format/lib.php'); // For course_get_format.
+
+class renderer extends \format_section_renderer_base {
 
     protected $tccolumnwidth = 100; // Default width in percent of the column(s).
     protected $tccolumnpadding = 0; // Default padding in pixels of the column(s).
@@ -60,15 +68,15 @@ class format_topcoll_renderer extends format_section_renderer_base {
      * @param moodle_page $page.
      * @param string $target one of rendering target constants.
      */
-    public function __construct(moodle_page $page, $target) {
+    public function __construct(\moodle_page $page, $target) {
         parent::__construct($page, $target);
         $this->courserenderer = $this->page->get_renderer('format_topcoll', 'course');
-        $this->togglelib = new \format_topcoll\togglelib;
+        $this->togglelib = new \format_topcoll\togglelib();
         $this->courseformat = course_get_format($page->course); // Needed for collapsed topics settings retrieval.
 
         /* Since format_topcoll_renderer::section_edit_control_items() only displays the 'Set current section' control when editing
-          mode is on we need to be sure that the link 'Turn editing mode on' is available for a user who does not have any
-          other managing capability. */
+           mode is on we need to be sure that the link 'Turn editing mode on' is available for a user who does not have any
+           other managing capability. */
         $page->set_other_editing_capability('moodle/course:setcurrentsection');
 
         $this->userisediting = $page->user_is_editing();
@@ -83,6 +91,17 @@ class format_topcoll_renderer extends format_section_renderer_base {
             if (in_array('boost', $page->theme->parents) === true) {
                 $this->bsnewgrid = true;
             }
+        }
+
+        // Portable.
+        $devicetype = \core_useragent::get_device_type(); // In /lib/classes/useragent.php.
+        if ($devicetype == "mobile") {
+            $this->mobiletheme = true;
+        } else if ($devicetype == "tablet") {
+            $this->tablettheme = true;
+        } else {
+            $this->mobiletheme = false;
+            $this->tablettheme = false;
         }
     }
 
@@ -290,19 +309,23 @@ class format_topcoll_renderer extends format_section_renderer_base {
             if ($course->marker == $section->section) {  // Show the "light globe" on/off.
                 $url->param('marker', 0);
                 $highlightoff = get_string('highlightoff');
-                $controls['highlight'] = array('url' => $url, "icon" => 'i/marked',
-                                               'name' => $highlightoff,
-                                               'pixattr' => array('class' => ''),
-                                               'attr' => array('class' => 'editing_highlight',
-                                               'data-action' => 'removemarker'));
+                $controls['highlight'] = array(
+                    'url' => $url, "icon" => 'i/marked',
+                    'name' => $highlightoff,
+                    'pixattr' => array('class' => ''),
+                    'attr' => array('class' => 'editing_highlight',
+                    'data-action' => 'removemarker')
+                );
             } else {
                 $url->param('marker', $section->section);
                 $highlight = get_string('highlight');
-                $controls['highlight'] = array('url' => $url, "icon" => 'i/marker',
-                                               'name' => $highlight,
-                                               'pixattr' => array('class' => ''),
-                                               'attr' => array('class' => 'editing_highlight',
-                                               'data-action' => 'setmarker'));
+                $controls['highlight'] = array(
+                    'url' => $url, "icon" => 'i/marker',
+                    'name' => $highlight,
+                    'pixattr' => array('class' => ''),
+                    'attr' => array('class' => 'editing_highlight',
+                    'data-action' => 'setmarker')
+                );
             }
         }
 
@@ -311,8 +334,8 @@ class format_topcoll_renderer extends format_section_renderer_base {
         // If the edit key exists, we are going to insert our controls after it.
         if (array_key_exists("edit", $parentcontrols)) {
             $merged = array();
-            // We can't use splice because we are using associative arrays.
-            // Step through the array and merge the arrays.
+            /* We can't use splice because we are using associative arrays.
+               Step through the array and merge the arrays. */
             foreach ($parentcontrols as $key => $action) {
                 $merged[$key] = $action;
                 if ($key == "edit") {
@@ -338,7 +361,7 @@ class format_topcoll_renderer extends format_section_renderer_base {
     protected function section_edit_control_menu($controls, $course, $section) {
         $o = "";
         if (!empty($controls)) {
-            $menu = new action_menu();
+            $menu = new \action_menu();
             $menu->set_menu_trigger(get_string('edit'));
             $menu->attributes['class'] .= ' section-actions';
             foreach ($controls as $value) {
@@ -347,9 +370,9 @@ class format_topcoll_renderer extends format_section_renderer_base {
                 $name = empty($value['name']) ? '' : $value['name'];
                 $attr = empty($value['attr']) ? array() : $value['attr'];
                 $class = empty($value['pixattr']['class']) ? '' : $value['pixattr']['class'];
-                $al = new action_menu_link_secondary(
+                $al = new \action_menu_link_secondary(
                     new moodle_url($url),
-                    new pix_icon($icon, '', null, array('class' => "smallicon " . $class)),
+                    new \pix_icon($icon, '', null, array('class' => "smallicon " . $class)),
                     $name,
                     $attr
                 );
@@ -361,10 +384,10 @@ class format_topcoll_renderer extends format_section_renderer_base {
                 $duplicatestr = get_string('duplicate', 'format_topcoll');
                 $duplicateurl = new moodle_url('/course/format/topcoll/duplicate.php',
                     array('courseid' => $course->id, 'sectionno' => $section->section, 'sesskey' => sesskey()));
-                $link = new action_link($duplicateurl, ' '.$duplicatestr, null,
+                $link = new \action_link($duplicateurl, ' '.$duplicatestr, null,
                     array('class' => 'menu-action', 'role' => 'menuitem'),
-                    new pix_icon('t/copy', $duplicatestr));
-                $link->add_action(new confirm_action(get_string('duplicateconfirm', 'format_topcoll'), null,
+                    new \pix_icon('t/copy', $duplicatestr));
+                $link->add_action(new \confirm_action(get_string('duplicateconfirm', 'format_topcoll'), null,
                     $duplicatestr));
                 $menu->add_secondary_action($link);
             }
@@ -464,7 +487,7 @@ class format_topcoll_renderer extends format_section_renderer_base {
         if (empty($this->tcsettings)) {
             $this->tcsettings = $this->courseformat->get_settings();
         }
-        if ((!$this->formatresponsive) && ($section->section != 0) &&
+        if ((!$onsectionpage) && (!$this->formatresponsive) && ($section->section != 0) &&
             ($this->tcsettings['layoutcolumnorientation'] == 2)) { // Horizontal column layout.
             $sectionstyle .= ' ' . $this->get_column_class($this->tcsettings['layoutcolumns']);
         }
@@ -499,7 +522,11 @@ class format_topcoll_renderer extends format_section_renderer_base {
                 $o .= html_writer::tag('div', $leftcontent, array('class' => 'left side'));
             }
         }
-        $o .= html_writer::start_tag('div', array('class' => 'content'));
+        $contentattr = array('class' => 'content');
+        if ($section->section != 0) {
+            $contentattr['aria-live'] = 'polite';
+        }
+        $o .= html_writer::start_tag('div', $contentattr);
 
         if (($onsectionpage == false) && ($section->section != 0)) {
             $o .= html_writer::start_tag('div',
@@ -518,7 +545,12 @@ class format_topcoll_renderer extends format_section_renderer_base {
             }
             $toggleclass .= ' the_toggle ' . $this->tctoggleiconsize;
             $o .= html_writer::start_tag('span',
-                array('class' => $toggleclass, 'role' => 'button', 'aria-expanded' => $ariaexpanded)
+                array(
+                    'class' => $toggleclass,
+                    'role' => 'button',
+                    'aria-expanded' => $ariaexpanded,
+                    'aria-controls' => 'toggledsection-'.$section->section
+                )
             );
 
             if (empty($this->tcsettings)) {
@@ -793,6 +825,11 @@ class format_topcoll_renderer extends format_section_renderer_base {
                 format_string($course->fullname));
         }
 
+        echo html_writer::start_tag('a', array('href' => new moodle_url('/course/view.php', array('id' => $course->id))));
+        $maincoursepage = get_string('maincoursepage', 'format_topcoll');
+        echo $this->output->pix_icon('t/less', $maincoursepage).$maincoursepage;
+        echo html_writer::end_tag('a');
+
         // Copy activity clipboard.
         echo $this->course_activity_clipboard($course, $displaysection);
         $thissection = $modinfo->get_section_info(0);
@@ -865,6 +902,8 @@ class format_topcoll_renderer extends format_section_renderer_base {
      * @param array $modnamesused (argument not used)
      */
     public function print_multiple_section_page($course, $sections, $mods, $modnames, $modnamesused) {
+        echo $this->course_styles();
+
         $modinfo = get_fast_modinfo($course);
         $course = $this->courseformat->get_course();
         if (empty($this->tcsettings)) {
@@ -901,18 +940,8 @@ class format_topcoll_renderer extends format_section_renderer_base {
         $coursenumsections = $this->courseformat->get_last_section_number();
         if ($coursenumsections > 0) {
             $sectiondisplayarray = array();
-            if ($coursenumsections > 1) {
-                if ($this->tcsettings['toggleallenabled'] == 2) {
-                    if (($this->userisediting) || ($this->tcsettings['onesection'] == 1)) {
-                        // Collapsed Topics all toggles.
-                        echo $this->toggle_all();
-                    }
-                }
-                if ($this->tcsettings['displayinstructions'] == 2) {
-                    // Collapsed Topics instructions.
-                    echo $this->display_instructions();
-                }
-            }
+            $sectionoutput = '';
+            $toggledsections = array();
             $currentsectionfirst = false;
             if (($this->tcsettings['layoutstructure'] == 4) && (!$this->userisediting)) {
                 $currentsectionfirst = true;
@@ -985,11 +1014,11 @@ class format_topcoll_renderer extends format_section_renderer_base {
                 $this->courseformat->update_topcoll_columns_setting($this->tcsettings['layoutcolumns']);
             }
 
-            echo $this->end_section_list();
+            $sectionoutput .= $this->end_section_list();
             if ((!$this->formatresponsive) && ($this->tcsettings['layoutcolumnorientation'] == 1)) { // Vertical columns.
-                echo html_writer::start_tag('div', array('class' => $this->get_row_class()));
+                $sectionoutput .= html_writer::start_tag('div', array('class' => $this->get_row_class()));
             }
-            echo $this->start_toggle_section_list();
+            $sectionoutput .= $this->start_toggle_section_list();
 
             $loopsection = 1;
             $breaking = false; // Once the first section is shown we can decide if we break on another column.
@@ -1096,9 +1125,9 @@ class format_topcoll_renderer extends format_section_renderer_base {
                 $shownsectioncount++;
 
                 if (!empty($thissection->ishidden)) {
-                    echo $this->section_hidden($thissection);
+                    $sectionoutput .= $this->section_hidden($thissection);
                 } else if (!empty($thissection->issummary)) {
-                    echo $this->section_summary($thissection, $course, null);
+                    $sectionoutput .= $this->section_summary($thissection, $course, null);
                 } else if (!empty($thissection->isshown)) {
                     if ((!$this->userisediting) && ($this->tcsettings['onesection'] == 2)) {
                         if ($thissection->toggle) {
@@ -1115,13 +1144,14 @@ class format_topcoll_renderer extends format_section_renderer_base {
                             }
                         }
                     }
-                    echo $this->section_header($thissection, $course, false, 0);
+                    $sectionoutput .= $this->section_header($thissection, $course, false, 0);
                     if ($thissection->uservisible) {
-                        echo $this->courserenderer->course_section_cm_list($course, $thissection, 0);
-                        echo $this->courserenderer->course_section_add_cm_control($course, $thissection->section, 0);
+                        $sectionoutput .= $this->courserenderer->course_section_cm_list($course, $thissection, 0);
+                        $sectionoutput .= $this->courserenderer->course_section_add_cm_control($course, $thissection->section, 0);
                     }
-                    echo html_writer::end_tag('div');
-                    echo $this->topcoll_section_footer($thissection, $course, false, 0);
+                    $sectionoutput .= html_writer::end_tag('div');
+                    $sectionoutput .= $this->topcoll_section_footer($thissection, $course, false, 0);
+                    $toggledsections[] = $thissection->section;
                 }
 
                 // Only check for breaking up the structure with rows if more than one column and when we output all of the sections.
@@ -1137,8 +1167,8 @@ class format_topcoll_renderer extends format_section_renderer_base {
 
                             if (($breaking == true) && ($shownsectioncount >= $breakpoint) &&
                                 ($columncount < $this->tcsettings['layoutcolumns'])) {
-                                echo $this->end_section_list();
-                                echo $this->start_toggle_section_list();
+                                $sectionoutput .= $this->end_section_list();
+                                $sectionoutput .= $this->start_toggle_section_list();
                                 $columncount++;
                                 // Next breakpoint is...
                                 $breakpoint += $numshownsections / $this->tcsettings['layoutcolumns'];
@@ -1151,8 +1181,8 @@ class format_topcoll_renderer extends format_section_renderer_base {
                             }
 
                             if (($breaking == true) && ($shownsectioncount >= $breakpoint)) {
-                                echo $this->end_section_list();
-                                echo $this->start_toggle_section_list();
+                                $sectionoutput .= $this->end_section_list();
+                                $sectionoutput .= $this->start_toggle_section_list();
                                 // Next breakpoint is...
                                 $breakpoint += $this->tcsettings['layoutcolumns'];
                             }
@@ -1162,6 +1192,19 @@ class format_topcoll_renderer extends format_section_renderer_base {
 
                 unset($sections[$thissection->section]);
             }
+            if ($coursenumsections > 1) {
+                if ($this->tcsettings['toggleallenabled'] == 2) {
+                    if (($this->userisediting) || ($this->tcsettings['onesection'] == 1)) {
+                        // Collapsed Topics all toggles.
+                        echo $this->toggle_all($toggledsections);
+                    }
+                }
+                if ($this->tcsettings['displayinstructions'] == 2) {
+                    // Collapsed Topics instructions.
+                    echo $this->display_instructions();
+                }
+            }
+            echo $sectionoutput;
         }
 
         $changenumsections = '';
@@ -1199,16 +1242,18 @@ class format_topcoll_renderer extends format_section_renderer_base {
             ((!$this->userisediting) && ($this->tcsettings['onesection'] == 2)),
             $shownonetoggle,
             $this->userisediting));
-        // Make sure the database has the correct state of the toggles if changed by the code.
-        // This ensures that a no-change page reload is correct.
+        /* Make sure the database has the correct state of the toggles if changed by the code.
+           This ensures that a no-change page reload is correct. */
         set_user_preference('topcoll_toggle_'.$course->id, $toggles);
     }
 
     /**
      * Displays the toggle all functionality.
+     * @param array $toggledsections Array of section id's that are toggled.
+     *
      * @return string HTML to output.
      */
-    protected function toggle_all() {
+    protected function toggle_all($toggledsections) {
         $o = html_writer::start_tag('li', array('class' => 'tcsection main clearfix', 'id' => 'toggle-all'));
 
         if ((($this->mobiletheme === false) && ($this->tablettheme === false)) || ($this->userisediting)) {
@@ -1222,16 +1267,31 @@ class format_topcoll_renderer extends format_section_renderer_base {
         }
         $o .= html_writer::start_tag('div', array('class' => 'sectionbody' . $iconsetclass));
         $o .= html_writer::start_tag('h4', null);
+        $ariacontrolselements = array();
+        foreach ($toggledsections as $toggledsection) {
+            $ariacontrolselements[] = 'toggledsection-'.$toggledsection;
+        }
+        $ariacontrols = implode(' ', $ariacontrolselements);
         $sct = $this->courseformat->get_structure_collection_type();
         $o .= html_writer::tag('span', get_string('topcollopened', 'format_topcoll'),
-            array('class' => 'on ' . $this->tctoggleiconsize, 'id' => 'toggles-all-opened',
-            'role' => 'button', 'tabindex' => '0',
-            'title' => get_string('sctopenall', 'format_topcoll', $sct))
+            array(
+                'class' => 'on '.$this->tctoggleiconsize,
+                'id' => 'toggles-all-opened',
+                'role' => 'button',
+                'tabindex' => '0',
+                'title' => get_string('sctopenall', 'format_topcoll', $sct),
+                'aria-controls' => $ariacontrols
+            )
         );
         $o .= html_writer::tag('span', get_string('topcollclosed', 'format_topcoll'),
-            array('class' => 'off ' . $this->tctoggleiconsize, 'id' => 'toggles-all-closed',
-            'role' => 'button', 'tabindex' => '0',
-            'title' => get_string('sctcloseall', 'format_topcoll', $sct))
+            array(
+                'class' => 'off '.$this->tctoggleiconsize,
+                'id' => 'toggles-all-closed',
+                'role' => 'button',
+                'tabindex' => '0',
+                'title' => get_string('sctcloseall', 'format_topcoll', $sct),
+                'aria-controls' => $ariacontrols
+            )
         );
         $o .= html_writer::end_tag('h4');
         $o .= html_writer::end_tag('div');
@@ -1271,19 +1331,70 @@ class format_topcoll_renderer extends format_section_renderer_base {
         return $o;
     }
 
-    public function set_portable($portable) {
-        switch ($portable) {
+    /**
+     * The course styles.
+     * @return string HTML to output.
+     */
+    protected function course_styles() {
+        if (empty($this->tcsettings)) {
+            $this->tcsettings = $this->courseformat->get_settings();
+        }
+
+        $coursestylescontext = array();
+        $coursestylescontext['togglebackground'] = \format_topcoll\toolbox::hex2rgba(
+            $this->tcsettings['togglebackgroundcolour'], $this->tcsettings['togglebackgroundopacity']);
+        $coursestylescontext['toggleforegroundcolour'] = \format_topcoll\toolbox::hex2rgba(
+            $this->tcsettings['toggleforegroundcolour'], $this->tcsettings['toggleforegroundopacity']);
+        switch ($this->tcsettings['togglealignment']) {
             case 1:
-                $this->mobiletheme = true;
+                $coursestylescontext['togglealignment'] = 'left';
                 break;
-            case 2:
-                $this->tablettheme = true;
+            case 3:
+                $coursestylescontext['togglealignment'] = 'right';
                 break;
             default:
-                $this->mobiletheme = false;
-                $this->tablettheme = false;
-                break;
+                $coursestylescontext['togglealignment'] = 'center';
         }
+        switch ($this->tcsettings['toggleiconposition']) {
+            case 2:
+                $coursestylescontext['toggleiconposition'] = 'right';
+                break;
+            default:
+                $coursestylescontext['toggleiconposition'] = 'left';
+        };
+        $coursestylescontext['toggleforegroundhovercolour'] = \format_topcoll\toolbox::hex2rgba(
+            $this->tcsettings['toggleforegroundhovercolour'], $this->tcsettings['toggleforegroundhoveropacity']);
+        $coursestylescontext['togglebackgroundhovercolour'] = \format_topcoll\toolbox::hex2rgba(
+            $this->tcsettings['togglebackgroundhovercolour'], $this->tcsettings['togglebackgroundhoveropacity']);
+
+        $topcollsidewidth = get_string('topcollsidewidthlang', 'format_topcoll');
+        $topcollsidewidthdelim = strpos($topcollsidewidth, '-');
+        $topcollsidewidthlang = strcmp(substr($topcollsidewidth, 0, $topcollsidewidthdelim), current_language());
+        $topcollsidewidthval = substr($topcollsidewidth, $topcollsidewidthdelim + 1);
+        // Dynamically changing widths with language.
+        if ((!$this->userisediting) && (($this->mobiletheme == false) && ($this->tablettheme == false)) && ($topcollsidewidthlang == 0)) {
+            $coursestylescontext['topcollsidewidthval'] = $topcollsidewidthval;
+        } else if ($this->userisediting) {
+            $coursestylescontext['topcollsidewidthval'] = '40px';
+        }
+
+        // Make room for editing icons.
+        if ((!$this->userisediting) && ($topcollsidewidthlang == 0)) {
+            $coursestylescontext['topcollsidewidthvalicons'] = $topcollsidewidthval;
+        }
+
+        // Establish horizontal unordered list for horizontal columns.
+        if (($this->get_format_responsive()) && ($this->tcsettings['layoutcolumnorientation'] == 2)) {
+            $coursestylescontext['hulhc'] = true;
+        }
+
+        // Site wide configuration Site Administration -> Plugins -> Course formats -> Collapsed Topics.
+        $coursestylescontext['tcborderradiustl'] = clean_param(get_config('format_topcoll', 'defaulttoggleborderradiustl'), PARAM_TEXT);
+        $coursestylescontext['tcborderradiustr'] = clean_param(get_config('format_topcoll', 'defaulttoggleborderradiustr'), PARAM_TEXT);
+        $coursestylescontext['tcborderradiusbr'] = clean_param(get_config('format_topcoll', 'defaulttoggleborderradiusbr'), PARAM_TEXT);
+        $coursestylescontext['tcborderradiusbl'] = clean_param(get_config('format_topcoll', 'defaulttoggleborderradiusbl'), PARAM_TEXT);
+
+        return $this->render_from_template('format_topcoll/coursestyles', $coursestylescontext);
     }
 
     public function set_user_preference($userpreference, $defaultuserpreference, $defaulttogglepersistence) {

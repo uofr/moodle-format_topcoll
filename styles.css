@@ -58,7 +58,7 @@
 }
 
 .format-topcoll.path-course-view .completionprogress {
-    z-index: 1;
+    /*z-index: 1;*/
 }
 
 .course-content ul.ctopics.bsnewgrid li.section.main,

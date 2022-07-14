@@ -214,7 +214,7 @@ $string['right'] = 'Right';
 $string['resettogglealignment'] = 'Toggle alignment';
 $string['resetalltogglealignment'] = 'Toggle alignments';
 $string['resettogglealignment_help'] = 'Resets the toggle alignment to follow the site default value.';
-$string['resetalltogglealignment_help'] = 'Resets the toggle alignment to follow the site default value.';
+$string['resetalltogglealignment_help'] = 'Resets all the toggle alignment to follow the site default value.';
 
 // Icon position - CONTRIB-4470.
 $string['settoggleiconposition'] = 'Icon position';
@@ -416,22 +416,7 @@ $string['resetdisplayinstructions_help'] = 'Resets the display instructions to f
 $string['resetalldisplayinstructions_help'] = 'Resets the display instructions to follow the site default value.';
 
 // Activity display *********************************.
-$string['answered'] = 'Answered';
-$string['attempted'] = 'Attempted';
-$string['contributed'] = 'Contributed';
-$string['draft'] = 'Not published to students';
-$string['due'] = 'Due {$a}';
-$string['expired'] = 'Expired';
 $string['feedbackavailable'] = 'Feedback available';
-$string['notanswered'] = 'Not answered';
-$string['notattempted'] = 'Not attempted';
-$string['notcontributed'] = 'Not contributed';
-$string['notopen'] = 'Not open';
-$string['notsubmitted'] = 'Not submitted';
-$string['overdue'] = 'Overdue';
-$string['reopened'] = 'Reopened';
-$string['submitted'] = 'Submitted';
-
 $string['xofyanswered'] = '{$a->completed} of {$a->participants} answered';
 $string['xofyattempted'] = '{$a->completed} of {$a->participants} attempted';
 $string['xofycontributed'] = '{$a->completed} of {$a->participants} contributed';
@@ -443,9 +428,6 @@ $string['xcontributed'] = '{$a->completed} contributed';
 $string['xposted'] = '{$a->completed} posted';
 $string['xsubmitted'] = '{$a->completed} submitted';
 $string['xungraded'] = '{$a} ungraded';
-
-$string['checked'] = 'Checked';
-$string['warning'] = 'Warning';
 
 // Duplicate section.
 $string['creatingsection'] = 'Creating new section';

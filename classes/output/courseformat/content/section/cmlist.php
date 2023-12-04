@@ -35,8 +35,25 @@ namespace format_topcoll\output\courseformat\content\section;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class cmlist extends \core_courseformat\output\local\content\section\cmlist {
-
     public function get_template_name(\renderer_base $renderer): string {
         return 'format_topcoll/local/content/section/cmlist';
+    }
+
+    /**
+     * Export this data so it can be used as the context for a mustache template.
+     *
+     * @param renderer_base $output typically, the renderer that's calling this function
+     * @return array data context for a mustache template
+     */
+    public function export_for_template(\renderer_base $output): \stdClass {
+        global $PAGE;
+        $data = parent::export_for_template($output);
+        $data->editing = $PAGE->user_is_editing();
+
+        // Section information for the 'activitychooserbuttonactivity'.
+        $data->num = $this->section->section ?? '0';
+        $data->sectionreturn = $this->format->get_section_number();
+
+        return $data;
     }
 }

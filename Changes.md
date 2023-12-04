@@ -1,14 +1,26 @@
 Version Information
 ===================
 
-Version 401.1.1 - 14/08/2023
+Version 403.1.0 - 08/10/2023
+----------------------------
+1. First Moodle 4.3 release.
+
+Version 402.1.1 - 14/08/2023
 ----------------------------
 1. Fix 'section_activity_summary' method.
 2. Single section navigation fixes.
 3. Improve single section navigation appearance.
-4. Fix 'Clicking a section takes you to a neighbouring section in some circumstances' - #134.
-5. Fix 'Upgrading from Moodle 3.9 sets default values to zero' - #135.
-6. Fix 'Move Left/Move Right doesn't work till page refresh' - #136.
+4. Add bulk editing tools.
+5. Improve layout by using CSS 'grid' for the toggle icon font.
+6. Fix 'Previous/Next section arrows are incorrect for RTL languages'.
+7. Fix 'Clicking a section takes you to a neighbouring section in some circumstances' - #134.
+8. Fix 'Upgrading from Moodle 3.9 sets default values to zero' - #135.
+9. Fix 'Move Left/Move Right doesn't work till page refresh' - #136.
+
+Version 402.1.0 - 07/05/23
+--------------------------
+1. First Moodle 4.2 release.
+2. Removed duplicate section functionality as core has its own version.
 
 Version 401.1.0 - 01/04/23
 --------------------------

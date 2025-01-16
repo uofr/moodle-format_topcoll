@@ -1,8 +1,37 @@
 Version Information
 ===================
 
-Version 403.1.2 - In development
---------------------------------
+Version 405.0.1 - 24/10/2024
+----------------------------
+1. First Moodle 4.5 version.
+2. Impact of MDL-81920 and MDL-81960.
+3. Fix 'Add section actions JS failing'.
+
+Version 404.1.2 - 24/09/2024
+----------------------------
+1. Fix 'Single page shows is_section_visible()' error.
+
+Version 404.1.1 - 22/09/2024
+----------------------------
+1. Show section zero if the section has meaningful content.
+2. Fix single section page navigation.
+3. Compromise with the Course Index that it will always refer to the main course page and the format
+   implement its own single page access and navigation.
+4. Fix single section page navigation visibility.
+
+Version 404.1.0 - 01/07/2024
+----------------------------
+1. Fix 'Error with Orphaned Sections when editing' - #151.
+
+Version 404.0.2 - 30/05/2024
+----------------------------
+1. Fix section zero with a summary is shown when there are no modules.
+2. Add flexible modules.
+3. Only show a section if it has modules that are visible to the user when not editing.
+
+Version 404.0.1 - 22/04/2024
+----------------------------
+1. Release candidate version for Moodle 4.4.
 
 Version 403.1.1 - 11/03/2024
 ----------------------------

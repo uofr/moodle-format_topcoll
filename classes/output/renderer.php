@@ -33,12 +33,18 @@ namespace format_topcoll\output;
 
 defined('MOODLE_INTERNAL') || die();
 
-use context_course;
 use core_courseformat\base as course_format;
+use context_course;
+use core\output\html_writer;
+use core\url;
 use core_courseformat\output\section_renderer;
-use html_writer;
-use moodle_url;
+use core_useragent;
+use format_topcoll\togglelib;
+use format_topcoll\toolbox;
+use moodle_exception;
+use moodle_page;
 use section_info;
+use stdClass;
 
 require_once($CFG->dirroot . '/course/format/lib.php'); // For course_get_format.
 
@@ -89,9 +95,9 @@ class renderer extends section_renderer {
      * @param moodle_page $page The page.
      * @param string $target One of rendering target constants.
      */
-    public function __construct(\moodle_page $page, $target) {
+    public function __construct(moodle_page $page, $target) {
         parent::__construct($page, $target);
-        $this->togglelib = new \format_topcoll\togglelib();
+        $this->togglelib = new togglelib();
         $this->courseformat = course_get_format($page->course); // Needed for collapsed topics settings retrieval.
         $this->course = $this->courseformat->get_course();
 
@@ -108,7 +114,7 @@ class renderer extends section_renderer {
         $this->rtl = right_to_left();
 
         // Portable.
-        $devicetype = \core_useragent::get_device_type(); // In /lib/classes/useragent.php.
+        $devicetype = core_useragent::get_device_type(); // In /lib/classes/useragent.php.
         if ($devicetype == "mobile") {
             $this->mobiletheme = true;
         } else if ($devicetype == "tablet") {
@@ -267,7 +273,7 @@ class renderer extends section_renderer {
                 if (empty($this->tcsettings)) {
                     $this->tcsettings = $this->courseformat->get_settings();
                 }
-                $url = new moodle_url('/course/view.php', ['id' => $course->id, 'section' => $section->section]);
+                $url = new url('/course/view.php', ['id' => $course->id, 'section' => $section->section]);
                 // Get the specific words from the language files.
                 $topictext = null;
                 if (($this->tcsettings['layoutstructure'] == 1) || ($this->tcsettings['layoutstructure'] == 4)) {
@@ -529,17 +535,15 @@ class renderer extends section_renderer {
 
         if ($this->userisediting && has_capability('moodle/course:update', $context)) {
             $sectioncontext['usereditingicon'] = $this->output->pix_icon('t/edit', get_string('edit'));
-            $sectioncontext['usereditingurl'] = new moodle_url(
+            $sectioncontext['usereditingurl'] = new url(
                 '/course/editsection.php',
                 ['id' => $section->id, 'sr' => $sectionreturn]
             );
         }
 
-        if ($section->uservisible) {
-            $sectioncontext['cscml'] = $this->course_section_cmlist($section);
-            if ($this->courseformat->show_editor()) {
-                $sectioncontext['cscml'] .= $this->course_section_add_cm_control($course, $section->section, $sectionreturn);
-            }
+        $sectioncontext['cscml'] = $this->course_section_cmlist($section);
+        if ($this->courseformat->show_editor()) {
+            $sectioncontext['cscml'] .= $this->course_section_add_cm_control($course, $section->section, $sectionreturn);
         }
 
         return $this->render_from_template('format_topcoll/section', $sectioncontext);
@@ -664,7 +668,7 @@ class renderer extends section_renderer {
 
         if ($this->courseformat->show_editor()) {
             $stealthsectioncontext['cmcontrols'] =
-                $this->courserenderer->course_section_add_cm_control($course, $section->section, $section->section);
+                $this->course_section_add_cm_control($course, $section->section, $section->section);
         }
 
         return $this->render_from_template('format_topcoll/stealthsection', $stealthsectioncontext);
@@ -723,11 +727,11 @@ class renderer extends section_renderer {
         if (!($thissection = $modinfo->get_section_info($displaysection))) {
             /* This section doesn't exist or is not available for the user.
                We actually already check this in course/view.php but just in case exit from this function as well. */
-            print_error(
+            throw new moodle_exception(
                 'unknowncoursesection',
                 'error',
                 course_get_url($course),
-                format_string($course->fullname)
+                format_string($course->fullname. ' - id='.$course->id)
             );
         }
 
@@ -741,7 +745,7 @@ class renderer extends section_renderer {
         $singlesectioncontext = [
             'maincoursepageicon' => $this->output->pix_icon('t/less', $maincoursepage),
             'maincoursepagestr' => $maincoursepage,
-            'maincoursepageurl' => new moodle_url('/course/view.php', ['id' => $course->id]),
+            'maincoursepageurl' => new url('/course/view.php', ['id' => $course->id]),
             'sectionnavlinks' => $this->section_nav_links(),
             // Title with section navigation links and jump to menu.
             'sectionnavselection' => $this->section_nav_selection($course, null, $displaysection),
@@ -749,7 +753,7 @@ class renderer extends section_renderer {
         ];
 
         $sectionzero = $modinfo->get_section_info(0);
-        if ($sectionzero->summary || !empty($modinfo->sections[0]) || $this->page->user_is_editing()) {
+        if ($this->courseformat->is_section_visible($sectionzero)) {
             $singlesectioncontext['sectionzero'] = $this->topcoll_section($sectionzero, $course, true, $displaysection);
         }
 
@@ -791,7 +795,7 @@ class renderer extends section_renderer {
         // General section if non-empty.
         $thissection = $sections[0];
         unset($sections[0]);
-        if ($thissection->summary || !empty($modinfo->sections[0]) || $this->userisediting) {
+        if ($this->courseformat->is_section_visible($thissection)) {
             $content .= $this->topcoll_section($thissection, $course, false);
         }
 
@@ -886,16 +890,16 @@ class renderer extends section_renderer {
                     $nextweekdate = $weekdate - ($weekofseconds);
                 }
                 $thissection = $modinfo->get_section_info($section);
-                $extrasectioninfo[$thissection->id] = new \stdClass();
+                $extrasectioninfo[$thissection->id] = new stdClass();
 
                 /* Show the section if the user is permitted to access it, OR if it's not available
                    but there is some available info text which explains the reason & should display. */
-                if (($this->tcsettings['layoutstructure'] != 3) || ($this->userisediting)) {
-                    $showsection = ($this->courseformat->is_section_visible($thissection));
-                } else {
-                    $showsection = (($this->courseformat->is_section_visible($thissection)) && ($nextweekdate <= $timenow));
+                $showsection = ($this->courseformat->is_section_visible($thissection));
+                if ($showsection && ($this->tcsettings['layoutstructure'] == 3) && (!$this->userisediting)) {
+                    $showsection = ($nextweekdate <= $timenow);
                 }
-                if (($currentsectionfirst == true) && ($showsection == true)) {
+
+                if ($currentsectionfirst && $showsection) {
                     // Show the section if we were meant to and it is the current section:....
                     $showsection = ($course->marker == $section);
                 } else if (
@@ -904,7 +908,27 @@ class renderer extends section_renderer {
                 ) {
                     $showsection = false; // Do not reshow current section.
                 }
-                if (!$showsection) {
+                if ($showsection) {
+                    if ($this->isoldtogglepreference == true) {
+                        $togglestate = substr($this->togglelib->get_toggles(), $section, 1);
+                        if ($togglestate == '1') {
+                            $extrasectioninfo[$thissection->id]->toggle = true;
+                        } else {
+                            $extrasectioninfo[$thissection->id]->toggle = false;
+                        }
+                    } else {
+                        $extrasectioninfo[$thissection->id]->toggle = $this->togglelib->get_toggle_state($thissection->section);
+                    }
+
+                    if ($this->courseformat->is_section_current($thissection)) {
+                        $this->currentsection = $thissection->section;
+                        $extrasectioninfo[$thissection->id]->toggle = true; // Open current section regardless of toggle state.
+                        $this->togglelib->set_toggle_state($thissection->section, true);
+                    }
+
+                    $extrasectioninfo[$thissection->id]->isshown = true;
+                    $sectiondisplayarray[] = $thissection;
+                } else {
                     // Hidden section message is overridden by 'unavailable' control.
                     $testhidden = false;
                     if ($this->tcsettings['layoutstructure'] != 4) {
@@ -926,26 +950,6 @@ class renderer extends section_renderer {
                             $sectiondisplayarray[] = $thissection;
                         }
                     }
-                } else {
-                    if ($this->isoldtogglepreference == true) {
-                        $togglestate = substr($this->togglelib->get_toggles(), $section, 1);
-                        if ($togglestate == '1') {
-                            $extrasectioninfo[$thissection->id]->toggle = true;
-                        } else {
-                            $extrasectioninfo[$thissection->id]->toggle = false;
-                        }
-                    } else {
-                        $extrasectioninfo[$thissection->id]->toggle = $this->togglelib->get_toggle_state($thissection->section);
-                    }
-
-                    if ($this->courseformat->is_section_current($thissection)) {
-                        $this->currentsection = $thissection->section;
-                        $extrasectioninfo[$thissection->id]->toggle = true; // Open current section regardless of toggle state.
-                        $this->togglelib->set_toggle_state($thissection->section, true);
-                    }
-
-                    $extrasectioninfo[$thissection->id]->isshown = true;
-                    $sectiondisplayarray[] = $thissection;
                 }
 
                 if (($this->tcsettings['layoutstructure'] != 3) || ($this->userisediting)) {
@@ -1103,7 +1107,7 @@ class renderer extends section_renderer {
             $this->userisediting, ]);
         /* Make sure the database has the correct state of the toggles if changed by the code.
            This ensures that a no-change page reload is correct. */
-        set_user_preference(\format_topcoll\togglelib::TOPCOLL_TOGGLE.'_' . $course->id, $toggles);
+        set_user_preference(togglelib::TOPCOLL_TOGGLE.'_' . $course->id, $toggles);
 
         return $content;
     }
@@ -1164,11 +1168,11 @@ class renderer extends section_renderer {
         }
 
         $coursestylescontext = [];
-        $coursestylescontext['togglebackground'] = \format_topcoll\toolbox::hex2rgba(
+        $coursestylescontext['togglebackground'] = toolbox::hex2rgba(
             $this->tcsettings['togglebackgroundcolour'],
             $this->tcsettings['togglebackgroundopacity']
         );
-        $coursestylescontext['toggleforegroundcolour'] = \format_topcoll\toolbox::hex2rgba(
+        $coursestylescontext['toggleforegroundcolour'] = toolbox::hex2rgba(
             $this->tcsettings['toggleforegroundcolour'],
             $this->tcsettings['toggleforegroundopacity']
         );
@@ -1204,11 +1208,11 @@ class renderer extends section_renderer {
                     $coursestylescontext['toggleiconposition'] = 'left';
             }
         }
-        $coursestylescontext['toggleforegroundhovercolour'] = \format_topcoll\toolbox::hex2rgba(
+        $coursestylescontext['toggleforegroundhovercolour'] = toolbox::hex2rgba(
             $this->tcsettings['toggleforegroundhovercolour'],
             $this->tcsettings['toggleforegroundhoveropacity']
         );
-        $coursestylescontext['togglebackgroundhovercolour'] = \format_topcoll\toolbox::hex2rgba(
+        $coursestylescontext['togglebackgroundhovercolour'] = toolbox::hex2rgba(
             $this->tcsettings['togglebackgroundhovercolour'],
             $this->tcsettings['togglebackgroundhoveropacity']
         );
@@ -1269,8 +1273,8 @@ class renderer extends section_renderer {
 
         if ($this->defaulttogglepersistence == 1) {
             global $USER;
-            $USER->topcoll_user_pref[\format_topcoll\togglelib::TOPCOLL_TOGGLE.'_' . $this->course->id] = PARAM_RAW;
-            $userpreference = get_user_preferences(\format_topcoll\togglelib::TOPCOLL_TOGGLE.'_' . $this->course->id);
+            $USER->topcoll_user_pref[togglelib::TOPCOLL_TOGGLE.'_' . $this->course->id] = PARAM_RAW;
+            $userpreference = get_user_preferences(togglelib::TOPCOLL_TOGGLE.'_' . $this->course->id);
         } else {
             $userpreference = null;
         }

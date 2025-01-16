@@ -26,19 +26,21 @@
 
 namespace format_topcoll;
 
+use advanced_testcase;
 use stdClass;
 
 /**
  * Library unit tests for the Collapsed Topics course format.
  * @group format_topcoll
  */
-final class courseformatlib_test extends \advanced_testcase {
+final class courseformatlib_test extends advanced_testcase {
     /** @var class $course */
     protected $course;
     /** @var class $courseformat */
     protected $courseformat;
 
     protected function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest(true);
 
         set_config('theme', 'boost');
@@ -60,6 +62,9 @@ final class courseformatlib_test extends \advanced_testcase {
         $this->courseformat = course_get_format($this->course);
     }
 
+    /**
+     * Setup.
+     */
     public function test_set_up(): void {
         $this->setAdminUser();
         // Check that the defaults have the correct starting values.
@@ -88,6 +93,9 @@ final class courseformatlib_test extends \advanced_testcase {
         $this->assertEquals('0.4', $thesettings['togglebackgroundhoveropacity']);
     }
 
+    /**
+     * Reset opacity.
+     */
     public function test_reset_opacity(): void {
         $teacher = $this->getDataGenerator()->create_user();
         $this->setUser($teacher);
@@ -113,6 +121,9 @@ final class courseformatlib_test extends \advanced_testcase {
         $this->assertEquals('0.8', $thesettings['togglebackgroundhoveropacity']);
     }
 
+    /**
+     * Reset all opacity.
+     */
     public function test_reset_all_opacity(): void {
         $this->setAdminUser();
 
@@ -133,6 +144,9 @@ final class courseformatlib_test extends \advanced_testcase {
         $this->assertEquals('0.8', $thesettings['togglebackgroundhoveropacity']);
     }
 
+    /**
+     * Show additional mod data default yes.
+     */
     public function test_showadditionalmoddata_default_yes(): void {
         $this->setAdminUser();
 
@@ -151,6 +165,9 @@ final class courseformatlib_test extends \advanced_testcase {
         $this->assertEquals(2, $thesettings['showadditionalmoddata']);
     }
 
+    /**
+     * Show additional mod data default reset.
+     */
     public function test_showadditionalmoddata_reset(): void {
         $this->setAdminUser();
 

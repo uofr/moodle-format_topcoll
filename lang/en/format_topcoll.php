@@ -52,15 +52,16 @@ $string['defaulttoggleallenabled_desc'] = 'States if the toggle all functionalit
 // Moodle 2.0 Enhancement - Moodle Tracker MDL-15252, MDL-21693 & MDL-22056 - http://docs.moodle.org/en/Development:Languages.
 $string['sectionname'] = 'Section';
 $string['pluginname'] = 'Collapsed Topics';
+$string['plugin_description'] = 'The course is divided into toggleable sections.';
 $string['section0name'] = 'General';
 
 // MDL-26105.
 $string['page-course-view-topcoll'] = 'Any course main page in the collapsed topics format';
 $string['page-course-view-topcoll-x'] = 'Any course page in the collapsed topics format';
 
-$string['addsection'] = 'Add section';
-$string['hidefromothers'] = 'Hide section';
-$string['showfromothers'] = 'Show section';
+$string['newsection'] = 'New section';
+$string['hidefromothers'] = 'Hide';
+$string['showfromothers'] = 'Show';
 $string['currentsection'] = 'This section';
 $string['editsection'] = 'Edit section';
 $string['deletesection'] = 'Delete section';
@@ -186,6 +187,10 @@ $string['columndynamic'] = 'Dynamic';
 $string['columnhorizontal'] = 'Horizontal';
 $string['columnvertical'] = 'Vertical';
 
+// Flexible modules.
+$string['setflexiblemodules'] = 'Flexible modules';
+$string['setflexiblemodules_help'] = 'Use flexible modules?';
+
 // MDL-34917 - implemented in M2.5 but needs to be here to support M2.4- versions.
 $string['maincoursepage'] = 'Main course page';
 
@@ -289,6 +294,9 @@ $string['defaultlayoutcolumns_desc'] = "Number of columns between one and four."
 
 $string['defaultlayoutcolumnorientation'] = 'Column orientation';
 $string['defaultlayoutcolumnorientation_desc'] = 'The default column orientation: Dynamic - Number sections per \'row\' adjust to window size, \'Column\' setting not currently used.<br>Horizontal - Sections go left to right.<br>Vertical - Sections go top to bottom.';
+
+$string['defaultflexiblemodules'] = 'Flexible modules';
+$string['defaultflexiblemodules_desc'] = 'Use flexible modules?';
 
 $string['defaulttgfgcolour'] = 'Toggle foreground colour';
 $string['defaulttgfgcolour_desc'] = "Toggle foreground colour in hexidecimal RGB.";
@@ -462,11 +470,11 @@ $string['sidepre'] = 'Pre';
 // Information.
 $string['information'] = 'Information';
 $string['informationsettings'] = 'Information settings';
-$string['informationsettingsdesc'] = 'Collapsed Topics format information';
+$string['informationsettingsdesc'] = 'Collapsed Topics course format information';
 $string['informationchanges'] = 'Changes';
 $string['settings'] = 'Settings';
 $string['settingssettings'] = 'Settings settings';
-$string['settingssettingsdesc'] = 'Collapsed Topics format settings';
+$string['settingssettingsdesc'] = 'Collapsed Topics course format settings';
 $string['love'] = 'love';
 $string['versioninfo'] = 'Release {$a->release}, version {$a->version} on Moodle {$a->moodle}.  Made with {$a->love} in Great Britain.';
 $string['versionalpha'] = 'Alpha version - Almost certainly contains bugs.  This is a development version for developers \'only\'!  Don\'t even think of installing on a production server!';

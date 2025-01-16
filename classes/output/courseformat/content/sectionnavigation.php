@@ -28,29 +28,87 @@
 
 namespace format_topcoll\output\courseformat\content;
 
+use context_course;
+use core\output\renderer_base;
+use stdClass;
+
 /**
  * Base class to render a course add section navigation.
  */
 class sectionnavigation extends \core_courseformat\output\local\content\sectionnavigation {
+    /** @var stdClass the calculated data to prevent calculations when rendered several times */
+    protected $data = null;
+
     /**
      * Export this data so it can be used as the context for a mustache template.
      *
      * @param renderer_base $output typically, the renderer that's calling this function
      * @return stdClass data context for a mustache template
      */
-    public function export_for_template(\renderer_base $output): \stdClass {
-        $data = parent::export_for_template($output);
+    public function export_for_template(renderer_base $output): stdClass {
+        global $USER;
+
+        if ($this->data !== null) {
+            return $this->data;
+        }
+
+        $format = $this->format;
+        $course = $format->get_course();
+        $context = context_course::instance($course->id);
+
+        $modinfo = $this->format->get_modinfo();
+        $sections = $modinfo->get_section_info_all();
+
+        // FIXME: This is really evil and should by using the navigation API.
+        $canviewhidden = has_capability('moodle/course:viewhiddensections', $context, $USER);
+
+        $data = (object)[
+            'previousurl' => '',
+            'nexturl' => '',
+            'larrow' => $output->larrow(),
+            'rarrow' => $output->rarrow(),
+            'currentsection' => $this->sectionno,
+        ];
+
+        $back = $this->sectionno - 1;
+        while ($back > 0 && empty($data->previousurl)) {
+            if ($canviewhidden || $format->is_section_visible($sections[$back])) {
+                if (!$sections[$back]->visible) {
+                    $data->previoushidden = true;
+                }
+                $data->previousname = get_section_name($course, $sections[$back]);
+                $data->previousurl = $format->get_view_url($back, ['navigation' => false]);
+                $data->hasprevious = true;
+            }
+            $back--;
+        }
+
+        $forward = $this->sectionno + 1;
+        $numsections = $format->get_last_section_number();
+        while ($forward <= $numsections && empty($data->nexturl)) {
+            if ($canviewhidden || $format->is_section_visible($sections[$forward])) {
+                if (!$sections[$forward]->visible) {
+                    $data->nexthidden = true;
+                }
+                $data->nextname = get_section_name($course, $sections[$forward]);
+                $data->nexturl = $format->get_view_url($forward, ['navigation' => false]);
+                $data->hasnext = true;
+            }
+            $forward++;
+        }
+
         $data->rtl = right_to_left();
+        $this->data = $data;
         return $data;
     }
 
     /**
      * Get the name of the template to use for this templatable.
      *
-     * @param \renderer_base $renderer The renderer requesting the template name
+     * @param renderer_base $renderer The renderer requesting the template name
      * @return string
      */
-    public function get_template_name(\renderer_base $renderer): string {
+    public function get_template_name(renderer_base $renderer): string {
         return 'format_topcoll/local/content/sectionnavigation';
     }
 }

@@ -268,7 +268,36 @@ class format_topcoll extends core_courseformat\base {
             // Don't show.
             return false;
         }
-        return parent::is_section_visible($section);
+        $shown = parent::is_section_visible($section);
+        if (($shown) && ($section->sectionnum == 0)) {
+            // Show section zero if summary has content, otherwise check modules.
+            if (empty(strip_tags($section->summary))) {
+                // Don't show section zero if no modules or all modules unavailable to user.
+                $showmovehere = ismoving($this->course->id);
+                if (!$showmovehere) {
+                    global $PAGE;
+                    $context = context_course::instance($this->course->id);
+                    if (!($PAGE->user_is_editing() && has_capability('moodle/course:update', $context))) {
+                        $modshown = false;
+                        $modinfo = get_fast_modinfo($this->course);
+
+                        if (!empty($modinfo->sections[$section->section])) {
+                            foreach ($modinfo->sections[$section->section] as $modnumber) {
+                                $mod = $modinfo->cms[$modnumber];
+                                if ($mod->is_visible_on_course_page()) {
+                                    // At least one is.
+                                    $modshown = true;
+                                    break;
+                                }
+                            }
+                        }
+                        $shown = $modshown;
+                    }
+                }
+            }
+        }
+
+        return $shown;
     }
 
     /**
@@ -330,53 +359,6 @@ class format_topcoll extends core_courseformat\base {
     }
 
     /**
-     * The URL to use for the specified course (with section)
-     *
-     * @param int|stdClass $section Section object from database or just field course_sections.section
-     *     if omitted the course view page is returned
-     * @param array $options options for view URL. At the moment core uses:
-     *     'navigation' (bool) if true and section has no separate page, the function returns null
-     *     'sr' (int) used by multipage formats to specify to which section to return
-     * @return null|moodle_url
-     */
-    public function get_view_url($section, $options = []) {
-        $course = $this->get_course();
-        $url = new moodle_url('/course/view.php', ['id' => $course->id]);
-
-        $sr = null;
-        if (array_key_exists('sr', $options)) {
-            $sr = $options['sr'];
-        }
-        if (is_object($section)) {
-            $sectionno = $section->section;
-        } else {
-            $sectionno = $section;
-        }
-        if ($sectionno !== null) {
-            if ($sr !== null) {
-                if ($sr) {
-                    $usercoursedisplay = COURSE_DISPLAY_MULTIPAGE;
-                    $sectionno = $sr;
-                } else {
-                    $usercoursedisplay = COURSE_DISPLAY_SINGLEPAGE;
-                }
-            } else {
-                $usercoursedisplay = $this->coursedisplay;
-            }
-            if ($sectionno != 0 && $usercoursedisplay == COURSE_DISPLAY_MULTIPAGE) {
-                $url->param('section', $sectionno);
-            } else {
-                global $CFG;
-                if (empty($CFG->linkcoursesections) && !empty($options['navigation'])) { // MDL-57412.
-                    return null;
-                }
-                $url->set_anchor('section-' . $sectionno);
-            }
-        }
-        return $url;
-    }
-
-    /**
      * Custom action after section has been moved in AJAX mode
      *
      * Used in course/rest.php
@@ -408,6 +390,47 @@ class format_topcoll extends core_courseformat\base {
             }
         }
         return ['sectiontitles' => $titles, 'current' => $current, 'action' => 'move'];
+    }
+
+    /**
+     * The URL to use for the specified course (with section)
+     *
+     * Please note that course view page /course/view.php?id=COURSEID is hardcoded in many
+     * places in core and contributed modules. If course format wants to change the location
+     * of the view script, it is not enough to change just this function. Do not forget
+     * to add proper redirection.
+     *
+     * @param int|stdClass $section Section object from database or just field course_sections.section
+     *     if null the course view page is returned
+     * @param array $options options for view URL. At the moment core uses:
+     *     'navigation' (bool) if true and section not empty, the function returns section page; otherwise, it returns course page.
+     *     'sr' (int) used by course formats to specify to which section to return
+     *     'expanded' (bool) if true the section will be shown expanded, true by default
+     * @return null|moodle_url
+     */
+    public function get_view_url($section, $options = []) {
+        $course = $this->get_course();
+        $url = new moodle_url('/course/view.php', ['id' => $course->id]);
+
+        if (array_key_exists('sr', $options)) {
+            $sectionno = $options['sr'];
+        } else if (is_object($section)) {
+            $sectionno = $section->section;
+        } else {
+            $sectionno = $section;
+        }
+        if ((!empty($options['navigation'])) && $sectionno !== null) {
+            // Unlike core, navigate to section on course page.
+            $url->set_anchor('section-'.$sectionno);
+        } else if ($this->uses_sections() && $sectionno !== null) {
+            if ($this->coursedisplay == COURSE_DISPLAY_MULTIPAGE) {
+                $url->param('section', $sectionno);
+            } else {
+                $url->set_anchor('section-'.$sectionno);
+            }
+        }
+
+        return $url;
     }
 
     /**
@@ -582,6 +605,10 @@ class format_topcoll extends core_courseformat\base {
                     'type' => PARAM_INT,
                 ],
                 'layoutcolumns' => [
+                    'default' => 0,
+                    'type' => PARAM_INT,
+                ],
+                'flexiblemodules' => [
                     'default' => 0,
                     'type' => PARAM_INT,
                 ],
@@ -818,6 +845,21 @@ class format_topcoll extends core_courseformat\base {
                     'element_type' => 'select',
                     'element_attributes' => [$layoutcolumnsvalues],
                 ];
+                $flexiblemodulesvalues = $this->generate_default_entry(
+                    'flexiblemodules',
+                    0,
+                    [
+                        1 => new lang_string('no'),
+                        2 => new lang_string('yes'),
+                    ]
+                );
+                $courseformatoptionsedit['flexiblemodules'] = [
+                    'label' => new lang_string('setflexiblemodules', 'format_topcoll'),
+                    'help' => 'setflexiblemodules',
+                    'help_component' => 'format_topcoll',
+                    'element_type' => 'select',
+                    'element_attributes' => [$flexiblemodulesvalues],
+                ];
                 $toggleallenabledvalues = $this->generate_default_entry(
                     'toggleallenabled',
                     0,
@@ -901,6 +943,8 @@ class format_topcoll extends core_courseformat\base {
                 $courseformatoptionsedit['layoutcolumns'] = [
                     'label' => 0, 'element_type' => 'hidden', ];
                 $courseformatoptionsedit['layoutcolumnorientation'] = [
+                    'label' => 0, 'element_type' => 'hidden', ];
+                $courseformatoptionsedit['flexiblemodules'] = [
                     'label' => 0, 'element_type' => 'hidden', ];
                 $courseformatoptionsedit['toggleallenabled'] = [
                     'label' => 0, 'element_type' => 'hidden', ];
@@ -1692,6 +1736,7 @@ class format_topcoll extends core_courseformat\base {
             $updatedata['layoutstructure'] = 0;
             $updatedata['layoutcolumns'] = 0;
             $updatedata['layoutcolumnorientation'] = 0;
+            $updatedata['flexiblemodules'] = 0;
             $updatedata['toggleallenabled'] = 0;
             $updatedata['viewsinglesectionenabled'] = 0;
             $updatedata['toggleiconposition'] = 0;
@@ -1784,6 +1829,7 @@ class format_topcoll extends core_courseformat\base {
             // Defaults taken from 'settings.php'.
             $data['displayinstructions'] = 0;
             $data['layoutcolumnorientation'] = 0;
+            $data['flexiblemodules'] = 0;
             $data['toggleallenabled'] = 0;
             $data['viewsinglesectionenabled'] = 0;
             $data['showsectionsummary'] = 0;
@@ -1841,12 +1887,12 @@ class format_topcoll extends core_courseformat\base {
     /**
      * Prepares the templateable object to display section name.
      *
-     * @param \section_info|\stdClass $section
+     * @param section_info|stdClass $section
      * @param bool $linkifneeded
      * @param bool $editable
      * @param null|lang_string|string $edithint
      * @param null|lang_string|string $editlabel
-     * @return \core\output\inplace_editable
+     * @return core\output\inplace_editable
      */
     public function inplace_editable_render_section_name(
         $section,

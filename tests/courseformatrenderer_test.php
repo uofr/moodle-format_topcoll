@@ -26,6 +26,9 @@
 
 namespace format_topcoll;
 
+use format_topcoll\togglelib;
+use ReflectionClass;
+
 /**
  * Renderer unit tests for the Collapsed Topics course format.
  * @group format_topcoll
@@ -52,7 +55,7 @@ final class courseformatrenderer_test extends \advanced_testcase {
      */
     protected static function call_method($obj, $name, array $args) {
         // Ref: http://stackoverflow.com/questions/249664/best-practices-to-test-protected-methods-with-phpunit.
-        $class = new \ReflectionClass($obj);
+        $class = new ReflectionClass($obj);
         $method = $class->getMethod($name);
         $method->setAccessible(true);
         return $method->invokeArgs($obj, $args);
@@ -67,7 +70,7 @@ final class courseformatrenderer_test extends \advanced_testcase {
      */
     protected static function set_property($obj, $name, $value) {
         // Ref: http://stackoverflow.com/questions/18558183/phpunit-mockbuilder-set-mock-object-internal-property ish.
-        $class = new \ReflectionClass($obj);
+        $class = new ReflectionClass($obj);
         $property = $class->getProperty($name);
         $property->setAccessible(true);
         $property->setValue($obj, $value);
@@ -81,7 +84,7 @@ final class courseformatrenderer_test extends \advanced_testcase {
      */
     protected static function get_property($obj, $name) {
         // Ref: http://stackoverflow.com/questions/18558183/phpunit-mockbuilder-set-mock-object-internal-property ish.
-        $class = new \ReflectionClass($obj);
+        $class = new ReflectionClass($obj);
         $property = $class->getProperty($name);
         $property->setAccessible(true);
         return $property;
@@ -90,8 +93,8 @@ final class courseformatrenderer_test extends \advanced_testcase {
     /**
      * Init.
      */
-    protected function init($numsections = 1, $layoutcolumnorientation = 2, $toggleallenabled = 2,
-        $viewsinglesectionenabled = 2): void {
+    protected function init($numsections = 1, $layoutcolumnorientation = 2, $flexiblemodules = 1,
+        $toggleallenabled = 2, $viewsinglesectionenabled = 2): void {
         $this->resetAfterTest(true);
 
         set_config('theme', 'boost');
@@ -126,6 +129,7 @@ final class courseformatrenderer_test extends \advanced_testcase {
         self::set_property($this->outputus, 'output', $this->ouroutput);
         $tcsettings = $this->courseformat->get_settings();
         $tcsettings['layoutcolumnorientation'] = $layoutcolumnorientation;
+        $tcsettings['flexiblemodules'] = $flexiblemodules;
         $tcsettings['toggleallenabled'] = $toggleallenabled;
         $tcsettings['viewsinglesectionenabled'] = $viewsinglesectionenabled;
         $tcsettings['toggleiconset'] = 'arrow';
@@ -256,7 +260,7 @@ final class courseformatrenderer_test extends \advanced_testcase {
 
     public function test_topcoll_section(): void {
         $this->init();
-        set_user_preference(\format_topcoll\togglelib::TOPCOLL_TOGGLE.'_' . $this->course->id, 'Z');
+        set_user_preference(togglelib::TOPCOLL_TOGGLE.'_' . $this->course->id, 'Z');
         set_config('defaultuserpreference', 0, 'format_topcoll');
         set_config('defaulttogglepersistence', 1, 'format_topcoll');
         self::set_property($this->outputus, 'formatresponsive', false);
@@ -399,7 +403,7 @@ final class courseformatrenderer_test extends \advanced_testcase {
             'activityclipboard' => self::call_method($this->outputus, 'course_activity_clipboard', array($course, $displaysection)),
             'maincoursepageicon' => $this->ouroutput->pix_icon('t/less', $maincoursepage),
             'maincoursepagestr' =>  $maincoursepage,
-            'maincoursepageurl' => new moodle_url('/course/view.php', array('id' => $course->id)),
+            'maincoursepageurl' => new url('/course/view.php', array('id' => $course->id)),
             'sectionnavselection' => self::call_method(
                 $this->outputus,
                 'section_nav_selection',
@@ -440,7 +444,7 @@ final class courseformatrenderer_test extends \advanced_testcase {
         global $CFG;
 
         $this->init();
-        set_user_preference(\format_topcoll\togglelib::TOPCOLL_TOGGLE.'_' . $this->course->id, null);
+        set_user_preference(togglelib::TOPCOLL_TOGGLE.'_' . $this->course->id, null);
         set_config('defaultuserpreference', 0, 'format_topcoll');
         set_config('defaulttogglepersistence', 1, 'format_topcoll');
         $section0 = $this->courseformat->get_section(0);
@@ -456,14 +460,14 @@ final class courseformatrenderer_test extends \advanced_testcase {
         $theoutput .= self::call_method($this->outputus, 'topcoll_section', [$section1, $this->course, false, null, $toggle]);
         $theoutput .= '</ul>';
 
-        $this->assertEquals($thevalue, $theoutput);
+        $this->assertEquals($theoutput, $thevalue);
     }
 
     public function test_multiple_section_page_vertical(): void {
         global $CFG;
 
         $this->init(1, 1);
-        set_user_preference(\format_topcoll\togglelib::TOPCOLL_TOGGLE.'_' . $this->course->id, 'Z');
+        set_user_preference(togglelib::TOPCOLL_TOGGLE.'_' . $this->course->id, 'Z');
         set_config('defaultuserpreference', 0, 'format_topcoll');
         set_config('defaulttogglepersistence', 1, 'format_topcoll');
 
@@ -481,14 +485,14 @@ final class courseformatrenderer_test extends \advanced_testcase {
         $theoutput .= self::call_method($this->outputus, 'topcoll_section', [$section1, $this->course, false, null, $toggle]);
         $theoutput .= '</ul></div>';
 
-        $this->assertEquals($thevalue, $theoutput);
+        $this->assertEquals($theoutput, $thevalue);
     }
 
     public function test_multiple_section_page_no_sections(): void {
         global $CFG;
 
         $this->init(0);
-        set_user_preference(\format_topcoll\togglelib::TOPCOLL_TOGGLE.'_' . $this->course->id, null);
+        set_user_preference(togglelib::TOPCOLL_TOGGLE.'_' . $this->course->id, null);
         set_config('defaultuserpreference', 0, 'format_topcoll');
         set_config('defaulttogglepersistence', 1, 'format_topcoll');
         $section0 = $this->courseformat->get_section(0);
@@ -500,7 +504,7 @@ final class courseformatrenderer_test extends \advanced_testcase {
         $theoutput .= self::call_method($this->outputus, 'topcoll_section', [$section0, $this->course, false, 0]);
         $theoutput .= '</ul>';
 
-        $this->assertEquals($thevalue, $theoutput);
+        $this->assertEquals($theoutput, $thevalue);
     }
 
     public function test_toggle_all(): void {

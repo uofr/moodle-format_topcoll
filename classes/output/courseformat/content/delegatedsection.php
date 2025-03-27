@@ -15,30 +15,42 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Class to render a course add section buttons.
+ * Contains the Collapsed Topics format delegated section course format output class.
  *
  * @package    format_topcoll
- * @copyright  &copy; 2024-onwards G J Barnard in respect to modifications of standard topics format.
+ * @copyright  2024 Mikel Martín <mikel@moodle.com>
+ * @copyright  &copy; 2025-onwards G J Barnard in respect to modifications of core code.
  * @author     G J Barnard - {@link https://moodle.org/user/profile.php?id=442195}
- * @copyright  2020 Ferran Recio <ferran@moodle.com>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace format_topcoll\output\courseformat\content;
-use stdClass;
+
+use core_courseformat\base as course_format;
+use core_courseformat\output\local\content\delegatedsection as delegatedsection_base;
+use section_info;
 
 /**
- * Collapsed Topics
+ * Class to render a delegated section.
  *
- * Class to render a course add section buttons.
- *
- * @package    format_topcoll
- * @copyright  &copy; 2024-onwards G J Barnard in respect to modifications of standard topics format.
- * @author     G J Barnard - {@link https://moodle.org/user/profile.php?id=442195}
- * @copyright  2020 Ferran Recio <ferran@moodle.com>
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   format_topcoll
+ * @copyright  &copy; 2025-onwards G J Barnard in respect to modifications of core code.
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class addsection extends \core_courseformat\output\local\content\addsection {
+class delegatedsection extends delegatedsection_base {
+    /**
+     * Constructor.
+     *
+     * @param course_format $format the course format
+     * @param section_info $section the section info
+     */
+    public function __construct(course_format $format, section_info $section) {
+        parent::__construct($format, $section);
+        if (!empty($section->component)) {
+            $this->isstealth = false;
+        }
+    }
+
     /**
      * Get the name of the template to use for this templatable.
      *
@@ -46,6 +58,6 @@ class addsection extends \core_courseformat\output\local\content\addsection {
      * @return string.
      */
     public function get_template_name(\renderer_base $renderer): string {
-        return 'format_topcoll/local/content/addsection';
+        return 'format_topcoll/local/content/delegatedsection';
     }
 }

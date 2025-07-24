@@ -182,8 +182,10 @@ final class courseformatrenderer_test extends \advanced_testcase {
             'section_right_content',
             [$section, $this->course, $onsectionpage]
         );
-        $thevalue = '<a title="View only &#039;Topic 1&#039;" class="cps_centre" ';
+        $thevalue = '<div class="right side">';
+        $thevalue .= '<a title="View only &#039;Topic 1&#039;" class="cps_centre" ';
         $thevalue .= 'href="' . $CFG->wwwroot . '/course/view.php?id=' . $this->course->id . '&amp;section=1">Topic<br />1</a>';
+        $thevalue .= '</div>';
         $this->assertEquals($thevalue, $theclass);
 
         $onsectionpage = true;
@@ -205,7 +207,7 @@ final class courseformatrenderer_test extends \advanced_testcase {
             'section_left_content',
             [$section, $this->course, $onsectionpage]
         );
-        $thevalue = '<span class="cps_centre">1</span>';
+        $thevalue = '<div class="left side"><span class="cps_centre">1</span></div>';
         $this->assertEquals($thevalue, $theclass);
 
         $onsectionpage = true;
@@ -345,12 +347,13 @@ final class courseformatrenderer_test extends \advanced_testcase {
             'columnclass' => 'col-sm-12',
             'heading' => '<h3 data-for="section_title" data-id="' . $section->id . '" data-number="1" id="sectionid-' .
                 $section->id . '-title" class="section-title">Section 1</h3>',
-            'leftcontent' => '<span class="cps_centre">1</span>',
+            'leftcontent' => '<div class="left side"><span class="cps_centre">1</span></div>',
             'nomtore' => true,
-            'rightcontent' => '',
+            'rightcontent' => '<div class="right side"><span class="cps_centre">Topic<br />1</span></div>',
             'rtl' => false,
             'sectionid' => $section->id,
             'sectionno' => '1',
+            'toggleiconsize' => 'tc-medium',
         ];
         $sectionhiddencontext['sectionavailability'] = self::call_method($this->outputus, 'section_availability', [$section]);
 
@@ -459,7 +462,8 @@ final class courseformatrenderer_test extends \advanced_testcase {
         $theoutput .= '</ul><ul class="ctopics ctoggled topics row">';
         $theoutput .= self::call_method($this->outputus, 'topcoll_section', [$section1, $this->course, false, null, $toggle]);
         $theoutput .= '</ul>';
-        $theoutput .= '<span id="tcdata" class="d-none" data-onetopic="false" data-onetopictoggle="false"></span>';
+        $theoutput .= '<span id="tcdata" class="d-none" data-onetopic="false" data-onetopictoggle="false"'.
+            ' data-defaulttogglepersistence="true"></span>';
 
         $this->assertEquals($theoutput, $thevalue);
     }
@@ -485,7 +489,8 @@ final class courseformatrenderer_test extends \advanced_testcase {
         $theoutput .= '<ul class="ctopics ctoggled topics col-sm-12">';
         $theoutput .= self::call_method($this->outputus, 'topcoll_section', [$section1, $this->course, false, null, $toggle]);
         $theoutput .= '</ul></div>';
-        $theoutput .= '<span id="tcdata" class="d-none" data-onetopic="false" data-onetopictoggle="false"></span>';
+        $theoutput .= '<span id="tcdata" class="d-none" data-onetopic="false" data-onetopictoggle="false"'.
+            ' data-defaulttogglepersistence="true"></span>';
 
         $this->assertEquals($theoutput, $thevalue);
     }
@@ -505,7 +510,8 @@ final class courseformatrenderer_test extends \advanced_testcase {
         $theoutput .= '<ul class="ctopics">';
         $theoutput .= self::call_method($this->outputus, 'topcoll_section', [$section0, $this->course, false, 0]);
         $theoutput .= '</ul>';
-        $theoutput .= '<span id="tcdata" class="d-none" data-onetopic="false" data-onetopictoggle="false"></span>';
+        $theoutput .= '<span id="tcdata" class="d-none" data-onetopic="false" data-onetopictoggle="false"'.
+            ' data-defaulttogglepersistence="true"></span>';
 
         $this->assertEquals($theoutput, $thevalue);
     }
@@ -526,7 +532,7 @@ final class courseformatrenderer_test extends \advanced_testcase {
                 '/theme/image.php/boost/core/1/spacer" />',
             'toggleallhover' => true,
             'tctoggleiconsize' => 'tc-medium',
-            'togglepos' => 'left',
+            'toggleiconposition' => 'start',
 
         ];
         $thevalue = self::call_method($this->outputus, 'render_from_template', ['format_topcoll/toggleall',

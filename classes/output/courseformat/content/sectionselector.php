@@ -60,6 +60,19 @@ class sectionselector extends \core_courseformat\output\local\content\sectionsel
         $modinfo = $this->format->get_modinfo();
 
         $data = $this->navigation->export_for_template($output);
+        
+        // let's truncate some long section names
+        // added by MD Sep 2025
+        $char_length = 18;
+        $shortmenu = 0;
+        if(strlen($data->previousname) > $char_length) {
+					$data->previousname = truncate_at_space($data->previousname, $char_length);
+					$shortmenu = 1;
+				}
+				if(strlen($data->nextname) > $char_length) {
+					$data->nextname = truncate_at_space($data->nextname, $char_length);
+					$shortmenu = 1;
+        }
 
         // Add the section selector.
         $sectionmenu = [];
@@ -81,10 +94,29 @@ class sectionselector extends \core_courseformat\output\local\content\sectionsel
 
         $select = new url_select($sectionmenu, '', ['' => get_string('jumpto')]);
         $select->class = 'jumpmenu';
+        if($shortmenu) {
+        	$select->class = $select->class . ' shorten'; // added by MD to shorten the menu between two long links
+        }
         $select->formid = 'sectionmenu';
 
         $data->selector = $output->render($select);
 
         return $data;
     }
+}
+function truncate_at_space($input_string, $max_length, $append_char = ' ...') {
+	/*
+	Given a string and a maximum length,
+	shortens a given string at a word boundary,
+	adds an ellipsis
+	Added by MD Sep 2025
+	*/
+	$truncated_string = substr($input_string, 0, $max_length);
+	$last_space = strrpos($truncated_string, ' ');
+
+	if ($last_space > 0) {
+		$truncated_string = substr($truncated_string, 0, $last_space);
+	}
+
+	return $truncated_string . $append_char;
 }

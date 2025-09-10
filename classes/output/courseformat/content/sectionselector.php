@@ -63,7 +63,7 @@ class sectionselector extends \core_courseformat\output\local\content\sectionsel
         
         // let's truncate some long section names
         // added by MD Sep 2025
-        $char_length = 18;
+        $char_length = 16;
         $shortmenu = 0;
         if(strlen($data->previousname) > $char_length) {
 					$data->previousname = truncate_at_space($data->previousname, $char_length);

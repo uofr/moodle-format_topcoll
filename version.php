@@ -23,18 +23,16 @@
  * code change. Full installation instructions, code adaptions and credits are included in the 'Readme.txt' file.
  *
  * @package    format_topcoll
- * @version    See the value of '$plugin->version' in below.
  * @copyright  &copy; 2009-onwards G J Barnard in respect to modifications of standard topics format.
- * @author     G J Barnard - {@link http://about.me/gjbarnard} and
- *                           {@link http://moodle.org/user/profile.php?id=442195}
- * @link       http://docs.moodle.org/en/Collapsed_Topics_course_format
- * @license    http://www.gnu.org/copyleft/gpl.html GNU Public License
- *
+ * @author     G J Barnard - {@link https://moodle.org/user/profile.php?id=442195}
+ * @link       https://docs.moodle.org/en/Collapsed_Topics_course_format
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2020110903;
-$plugin->maturity = MATURITY_BETA;
-$plugin->requires  = 2020110900.00; // 3.10 (Build: 20201109).
+$plugin->version = 2024092207;
+$plugin->maturity = MATURITY_STABLE;
+$plugin->requires = 2024100700.00; // 4.5 (Build: 20241007).
+$plugin->supported = [405, 405];
 $plugin->component = 'format_topcoll';
-$plugin->release = '3.10.0.3';
+$plugin->release = '405.1.3';

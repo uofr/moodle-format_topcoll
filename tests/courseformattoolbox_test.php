@@ -18,28 +18,31 @@
  * Collapsed Topics course format.
  *
  * @package    format_topcoll
- * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2017-onwards G J Barnard in respect to modifications of standard topics format.
- * @author     G J Barnard - {@link http://moodle.org/user/profile.php?id=442195}
- * @link       http://docs.moodle.org/en/Collapsed_Topics_course_format
- * @license    http://www.gnu.org/copyleft/gpl.html GNU Public License
+ * @author     G J Barnard - {@link https://moodle.org/user/profile.php?id=442195}
+ * @link       https://docs.moodle.org/en/Collapsed_Topics_course_format
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-defined('MOODLE_INTERNAL') || die();
+
+namespace format_topcoll;
+
+use advanced_testcase;
 
 /**
  * Toolbox unit tests for the Collapsed Topics course format.
  * @group format_topcoll
  */
-class format_topcoll_courseformattoolbox_testcase extends advanced_testcase {
-
+final class courseformattoolbox_test extends advanced_testcase {
     protected function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest(true);
 
         set_config('theme', 'boost');
     }
 
-    public function test_hex2rgba() {
-        $theoutput = \format_topcoll\toolbox::hex2rgba('ffaabb', '0.8');;
+    public function test_hex2rgba(): void {
+        $theoutput = \format_topcoll\toolbox::hex2rgba('ffaabb', '0.8');
+        ;
         $thevalue = 'rgba(255, 170, 187, 0.8)';
 
         $this->assertEquals($thevalue, $theoutput);

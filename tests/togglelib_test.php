@@ -18,22 +18,24 @@
  * Collapsed Topics course format.
  *
  * @package    format_topcoll
- * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2018-onwards G J Barnard in respect to modifications of standard topics format.
- * @author     G J Barnard - {@link http://moodle.org/user/profile.php?id=442195}
- * @link       http://docs.moodle.org/en/Collapsed_Topics_course_format
- * @license    http://www.gnu.org/copyleft/gpl.html GNU Public License
+ * @author     G J Barnard - {@link https://moodle.org/user/profile.php?id=442195}
+ * @link       https://docs.moodle.org/en/Collapsed_Topics_course_format
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-defined('MOODLE_INTERNAL') || die();
+
+namespace format_topcoll;
+
+use advanced_testcase;
+use format_topcoll\togglelib;
 
 /**
  * Togglelib unit tests for the Collapsed Topics course format.
  * @group format_topcoll
  */
-class format_topcoll_togglelib_testcase extends advanced_testcase {
-
-    public function test_decode_toggle_state() {
-        $togglelib = new \format_topcoll\togglelib;
+final class togglelib_test extends advanced_testcase {
+    public function test_decode_toggle_state(): void {
+        $togglelib = new togglelib();
 
         $mindigit = $togglelib->get_min_digit();
         $maxdigit = $togglelib->get_max_digit();
@@ -51,22 +53,30 @@ class format_topcoll_togglelib_testcase extends advanced_testcase {
         $testval = 0;
         while ($currentouterdigit != $maxdigit) {
             while ($currentinnerdigit != $maxdigit) {
-                $this->assertEquals(sprintf('%012d', decbin($testval)),
-                    $togglelib->decode_toggle_state($currentouterdigit.$currentinnerdigit));
+                $this->assertEquals(
+                    sprintf('%012d', decbin($testval)),
+                    $togglelib->decode_toggle_state($currentouterdigit . $currentinnerdigit)
+                );
                 $currentinnerdigit = chr(ord($currentinnerdigit) + 1);
                 $testval++;
             }
-            $this->assertEquals(sprintf('%012d', decbin($testval)), $togglelib->decode_toggle_state($currentouterdigit.$maxdigit));
+            $this->assertEquals(
+                sprintf('%012d', decbin($testval)),
+                $togglelib->decode_toggle_state($currentouterdigit . $maxdigit)
+            );
             $testval++;
             $currentinnerdigit = $mindigit;
             $currentouterdigit = chr(ord($currentouterdigit) + 1);
         }
         $currentinnerdigit = $mindigit;
         while ($currentinnerdigit != $maxdigit) {
-            $this->assertEquals(sprintf('%012d', decbin($testval)), $togglelib->decode_toggle_state($maxdigit.$currentinnerdigit));
+            $this->assertEquals(
+                sprintf('%012d', decbin($testval)),
+                $togglelib->decode_toggle_state($maxdigit . $currentinnerdigit)
+            );
             $currentinnerdigit = chr(ord($currentinnerdigit) + 1);
             $testval++;
         }
-        $this->assertEquals(sprintf('%012d', decbin($testval)), $togglelib->decode_toggle_state($maxdigit.$maxdigit));
+        $this->assertEquals(sprintf('%012d', decbin($testval)), $togglelib->decode_toggle_state($maxdigit . $maxdigit));
     }
 }

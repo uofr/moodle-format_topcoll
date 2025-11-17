@@ -23,13 +23,13 @@
  * code change. Full installation instructions, code adaptions and credits are included in the 'Readme.md' file.
  *
  * @package    format_topcoll
- * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2009-onwards G J Barnard in respect to modifications of standard topics format.
- * @author     G J Barnard - gjbarnard at gmail dot com and {@link http://moodle.org/user/profile.php?id=442195}
- * @link       http://docs.moodle.org/en/Collapsed_Topics_course_format
- * @license    http://www.gnu.org/copyleft/gpl.html GNU Public License
- *
+ * @author     G J Barnard - {@link https://moodle.org/user/profile.php?id=442195}
+ * @link       https://docs.moodle.org/en/Collapsed_Topics_course_format
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+// phpcs:disable moodle.Files.LangFilesOrdering
 
 // English Pirate Translation of Collapsed Topics Course Format.
 
@@ -96,45 +96,49 @@ $string['maincoursepage'] = 'Ye main course page';
 $string['setlayoutelements_help'] = 'How much information about thee toggles / sections you wish to be displayed.';
 $string['setlayoutstructure_help'] = "Avast ye landlubbers, this be thee layout structure of thee course.  Ye choose between:<br />'Treasure chest' - where each section is presented as thy treasure chest in section number order.<br />'Sailing week' - where each section is presented as thy week in ascending week order.<br />'Current sailing week first' - which is the same as weeks but thee current week is shown at thee top and preceding weeks in descending order are displayed below except in editing mode where thee structure is thy same as 'Weeks'.<br />'Current treasure chest first' - which is thee same as 'Treasure chest' except that thee current treasure chest is shown at thee top if it has been set.<br />'Sailing Day' - where each section is presented as a day in thy ascending day order from thee start date of thee course.";
 $string['setlayout_help'] = 'Contains thee settings to do with thee layout of the format within thy course.';
-$string['resetlayout_help'] = 'Resets thee layout to thee default so it will be the same as a course the first time it is in thy Collapsed Topics format';
-$string['resetalllayout_help'] = 'Resets the layout to the default values for all courses so it will be the same as a course the first time it is in the Collapsed Topics format.';
+$string['resetlayout_help'] = 'Resets thee layout to thee default to follow thee site default value.';
+$string['resetalllayout_help'] = 'Resets the layout to follow thee site default value for all thy courses.';
 // Moodle Tracker CONTRIB-3529.
 $string['setcolour_help'] = 'Contains thee settings to do with thy colour of the format within the course.';
 $string['settoggleforegroundcolour_help'] = 'Sets thee colour of thy text on the toggle.';
 $string['settoggleforegroundhovercolour_help'] = 'Sets thee colour of thy text on thy toggle when thee mouse scuttles over it.';
 $string['settogglebackgroundcolour_help'] = 'Sets thee background of thy toggle.';
 $string['settogglebackgroundhovercolour_help'] = 'Sets thee background of thy toggle when thee mouse scuttles over it.';
-$string['resetcolour_help'] = 'Resets thee colours to thee default values so it will be thee same as a course thy first time it is in thee Collapsed Topics format';
-$string['resetallcolour_help'] = 'Resets thee colours to the default values for all courses so it will be thy same as a course the first time it is in thee Collapsed Topics format.';
+$string['resetcolour_help'] = 'Resets thee colours to follow thee site default value';
+$string['resetallcolour_help'] = 'Resets thee colours to follow thee site default value for all thy courses.';
 // Columns enhancement.
 $string['setlayoutcolumns_help'] = 'How many columns to use.';
 
 // Toggle alignment - CONTRIB-4098.
 $string['settogglealignment'] = 'Thee toggle text alignment';
 $string['settogglealignment_help'] = 'Sets thee alignment of thee text in thy toggle.';
+$string['end'] = 'Aft';
 $string['left'] = 'Port';
 $string['center'] = 'Midships';
 $string['right'] = 'Starboard';
+$string['start'] = 'Fore';
 $string['resettogglealignment'] = 'Thee toggle alignment';
 $string['resetalltogglealignment'] = 'Thee toggle alignments';
-$string['resettogglealignment_help'] = 'Resets thee toggle alignment to thy default values so thy will be thy same as a course thee first time it is in thee Collapsed Topics format.';
-$string['resetalltogglealignment_help'] = 'Resets thee toggle alignment to thy default values for all courses so it will be thy same as a course thee first time it is in thee Collapsed Topics format.';
+$string['resettogglealignment_help'] = 'Resets thee toggle alignment to follow thee site default value.';
+$string['resetalltogglealignment_help'] = 'Resets thee toggle alignment to follow thee site default value for all thy courses.';
 
 // Icon position - CONTRIB-4470.
 $string['settoggleiconposition'] = 'Icon position';
-$string['settoggleiconposition_help'] = 'States that thee icon should be on thy left or thee right of thy toggle text.';
+$string['settoggleiconposition_help'] = 'States that thee icon should be on thy start or thee end of thy toggle text.';
 $string['defaulttoggleiconposition'] = 'Icon position';
-$string['defaulttoggleiconposition_desc'] = 'States if thee icon should be on thy left or thee right of thy toggle text.';
+$string['defaulttoggleiconposition_desc'] = 'States if thee icon should be on thy start or thee end of thy toggle text.';
 
 // Icon set enhancement.
 $string['settoggleiconset'] = 'Thee icon set';
-$string['settoggleiconset_help'] = 'Sets thee icon set of thy toggle.';
+$string['settoggleiconset_help'] = 'Select thee icon set to be thy one of:<br><table><tbody><tr><td>Straight as an arrow</td><td>{$a->arrow}</td></tr><tr><td>Lantern</td><td>{$a->bulb}</td></tr><tr><td>Cloud</td><td>{$a->cloud}</td></tr><tr><td>Eyeball</td><td>{$a->eye}</td></tr><tr><td>Map pouch</td><td>{$a->folder}</td></tr><tr><td>Landlubber signal</td><td>{$a->groundsignal}</td></tr><tr><td>LED from thee future</td><td>{$a->led}</td></tr><tr><td>Point thee bow towards thy treasure</td><td>{$a->point}</td></tr><tr><td>Power mee hearties</td><td>{$a->power}</td></tr><tr><td>Wireless</td><td>{$a->radio}</td></tr><tr><td>Smiley they bee not</td><td>{$a->smiley}</td></tr><tr><td>Square riggin</td><td>{$a->square}</td></tr><tr><td>Sun / Moon</td><td>{$a->sunmoon}</td></tr><tr><td>Switch thy flag</td><td>{$a->switch}</td></tr><tr><td>Icon font</td><td>{$a->tif}</td></tr></tbody></table><br>Where \'Icon font\' allows thee to specify thy FontAwesome CSS class for thee open and close icon with thy settings \'Open toggle icon font\' and \'Closed toggle icon font\'.';
 $string['settoggleallhover'] = 'Set thee toggle all icon hover';
 $string['settoggleallhover_help'] = 'Sets if thee toggle all icons will change when thy mouse moves over them.';
 $string['arrow'] = 'Straight as an arrow';
 $string['bulb'] = 'Lantern';
 $string['cloud'] = 'Cloud';
 $string['eye'] = 'Eyeball';
+$string['folder'] = 'Map pouch';
+$string['groundsignal'] = 'Landlubber signal';
 $string['led'] = 'LED from thee future';
 $string['point'] = 'Point thee bow towards thy treasure';
 $string['power'] = 'Power mee hearties';
@@ -145,8 +149,8 @@ $string['sunmoon'] = 'Sun / Moon';
 $string['switch'] = 'Switch thy flag';
 $string['resettoggleiconset'] = 'Thee toggle icon set';
 $string['resetalltoggleiconset'] = 'Thee toggle icon sets';
-$string['resettoggleiconset_help'] = 'Resets thee toggle icon set and thy toggle all hover to thy default values so thy will be thee same as a course thee first time it is in thy Collapsed Topics format.';
-$string['resetalltoggleiconset_help'] = 'Resets thee toggle icon set and thy toggle all hover to thy default values for all courses so it will be thy same as a course thee first time it is in thy Collapsed Topics format.';
+$string['resettoggleiconset_help'] = 'Resets thee toggle icon set and thy toggle all hover to follow thee site default value.';
+$string['resetalltoggleiconset_help'] = 'Resets thee toggle icon set and thy toggle all hover to follow thee site default value for all thy courses.';
 
 // Site Administration -> Plugins -> Course formats -> Collapsed Topics or Manage course formats - Settings.
 $string['off'] = 'Off';
@@ -179,10 +183,10 @@ $string['defaulttogglepersistence'] = 'Toggle persistence';
 $string['defaulttogglepersistence_desc'] = "'On' or 'Off'.  You may wish to turn off for an AJAX performance increase but sailor toggle selections will not be recalled on page refresh or revisit.<br />Note: If turning persistence off remove any rows containing 'topcoll_toggle_x' in the 'name' field of the 'user_preferences' table in the database.  Where thee 'x' in 'topcoll_toggle_x' will be a course id.";
 
 $string['defaulttogglealignment'] = 'Toggle text alignment';
-$string['defaulttogglealignment_desc'] = "'Left', 'Centre' or 'Right'.";
+$string['defaulttogglealignment_desc'] = "'Fore', 'Midships' or 'Aft'.";
 
 $string['defaulttoggleiconset'] = 'Toggle icon set';
-$string['defaulttoggleiconset_desc'] = "'Straight as an arrow'                => Arrow icon set.<br />'Lantern'                             => Bulb icon set.<br />'Cloud'                               => Cloud icon set.<br />'Eyeball'                             => Eye icon set.<br />'LED from thee future'                => LED icon set.<br />'Point thee bow towards thy treasure' => Point icon set.<br />'Power mee hearties'                  => Power icon set.<br />'Wireless'                            => Radio icon set.<br />'Smiley they bee not'                 => Smiley icon set.<br />'Square riggin'                       => Square icon set.<br />'Sun / Moon'                          => Sun / Moon icon set.<br />'Switch thy flag'                     => Switch icon set.";
+$string['defaulttoggleiconset_desc'] = 'Select thee icon set to be thy one of:<br><table><tbody><tr><td>Straight as an arrow</td><td>{$a->arrow}</td></tr><tr><td>Lantern</td><td>{$a->bulb}</td></tr><tr><td>Cloud</td><td>{$a->cloud}</td></tr><tr><td>Eyeball</td><td>{$a->eye}</td></tr><tr><td>Map pouch</td><td>{$a->folder}</td></tr><tr><td>Landlubber signal</td><td>{$a->groundsignal}</td></tr><tr><td>LED from thee future</td><td>{$a->led}</td></tr><tr><td>Point thee bow towards thy treasure</td><td>{$a->point}</td></tr><tr><td>Power mee hearties</td><td>{$a->power}</td></tr><tr><td>Wireless</td><td>{$a->radio}</td></tr><tr><td>Smiley they bee not</td><td>{$a->smiley}</td></tr><tr><td>Square riggin</td><td>{$a->square}</td></tr><tr><td>Sun / Moon</td><td>{$a->sunmoon}</td></tr><tr><td>Switch thy flag</td><td>{$a->switch}</td></tr><tr><td>Icon font</td><td>{$a->tif}</td></tr></tbody></table><br>Where \'Icon font\' allows thee to specify thy FontAwesome CSS class for thee open and close icon with thy settings \'Open toggle icon font\' and \'Closed toggle icon font\'.';
 
 $string['defaulttoggleallhover'] = 'Toggle all icon hovers';
 $string['defaulttoggleallhover_desc'] = "'Nay' or 'Aye'.";
@@ -205,8 +209,8 @@ $string['defaultdisplayinstructions'] = 'Display orders to crew';
 $string['defaultdisplayinstructions_desc'] = "Display orders to crew informing them how to use thee toggles.  Can bee aye or nay.";
 $string['resetdisplayinstructions'] = 'Display orders';
 $string['resetalldisplayinstructions'] = 'Display orders';
-$string['resetdisplayinstructions_help'] = 'Resets thy display orders to thee default value so it will be thy same as a course thee first time it is in thy Collapsed Topics format.';
-$string['resetalldisplayinstructions_help'] = 'Resets thy display orders to thee default value for all courses so it will be thee same as a course thee first time it is in thy Collapsed Topics format.';
+$string['resetdisplayinstructions_help'] = 'Resets thy display orders to follow thee site default value.';
+$string['resetalldisplayinstructions_help'] = 'Resets thy display orders to follow thee site default value for all thy courses.';
 
 // Toggle icon size.
 $string['defaulttoggleiconsize'] = 'Toggle icon size';

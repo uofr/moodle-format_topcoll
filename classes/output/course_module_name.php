@@ -23,18 +23,32 @@
  * code change. Full installation instructions, code adaptions and credits are included in the 'Readme.txt' file.
  *
  * @package    format_topcoll
- * @version    See the value of '$plugin->version' in below.
- * @copyright  &copy; 2009-onwards G J Barnard in respect to modifications of standard topics format.
- * @author     G J Barnard - {@link http://about.me/gjbarnard} and
- *                           {@link http://moodle.org/user/profile.php?id=442195}
+ * @version    See the value of '$plugin->version' in version.php.
+ * @copyright  &copy; 2018-onwards G J Barnard in respect to modifications of core code.
+ * @author     G J Barnard - {@link http://moodle.org/user/profile.php?id=442195}
  * @link       http://docs.moodle.org/en/Collapsed_Topics_course_format
  * @license    http://www.gnu.org/copyleft/gpl.html GNU Public License
  *
  */
+
+namespace format_topcoll\output;
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2020110903;
-$plugin->maturity = MATURITY_BETA;
-$plugin->requires  = 2020110900.00; // 3.10 (Build: 20201109).
-$plugin->component = 'format_topcoll';
-$plugin->release = '3.10.0.3';
+class course_module_name extends \core_course\output\course_module_name {
+    /**
+     * Export this data so it can be used as the context for a mustache template (core/inplace_editable).
+     *
+     * @param renderer_base $output typically, the renderer that's calling this function
+     * @return array data context for a mustache template
+     */
+    public function export_for_template(\renderer_base $output) {
+        global $PAGE;
+        $courserenderer = $PAGE->get_renderer('format_topcoll', 'course'); // Use our renderer instead.
+        $this->displayvalue = $courserenderer->course_section_cm_name_title($this->cm, $this->displayoptions);
+        if (strval($this->displayvalue) === '') {
+            $this->editable = false;
+        }
+        return parent::export_for_template($output);
+    }
+}

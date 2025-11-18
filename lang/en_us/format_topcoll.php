@@ -23,13 +23,13 @@
  * code change. Full installation instructions, code adaptions and credits are included in the 'Readme.md' file.
  *
  * @package    format_topcoll
+ * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2009-onwards G J Barnard in respect to modifications of standard topics format.
- * @author     G J Barnard - {@link https://moodle.org/user/profile.php?id=442195}
- * @link       https://docs.moodle.org/en/Collapsed_Topics_course_format
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author     G J Barnard - gjbarnard at gmail dot com and {@link http://moodle.org/user/profile.php?id=442195}
+ * @link       http://docs.moodle.org/en/Collapsed_Topics_course_format
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU Public License
+ *
  */
-
-// phpcs:disable moodle.Files.LangFilesOrdering
 
 // English American Translation of Collapsed Topics Course Format.
 
@@ -48,8 +48,8 @@ $string['settoggleforegroundcolour_help'] = 'Sets the color of the text on the t
 $string['settoggleforegroundhovercolour_help'] = 'Sets the color of the text on the toggle when the mouse moves over it.';
 $string['settogglebackgroundcolour_help'] = 'Sets the background color of the toggle.';
 $string['settogglebackgroundhovercolour_help'] = 'Sets the background color of the toggle when the mouse moves over it.';
-$string['resetcolour_help'] = 'Resets the colors and opacities to follow the site default value.';
-$string['resetallcolour_help'] = 'Resets the colors and opacities to follow the site default value.';
+$string['resetcolour_help'] = 'Resets the colors and opacities to the default values so it will be the same as a course the first time it is in the Collapsed Topics format.';
+$string['resetallcolour_help'] = 'Resets the colors and opacities to the default values for all courses so it will be the same as a course the first time it is in the Collapsed Topics format.';
 
 // Toggle alignment - CONTRIB-4098.
 $string['center'] = 'Center';
@@ -66,3 +66,4 @@ $string['defaulttgbghvrcolour_desc'] = "Toggle background hover color in hexidec
 
 // Capabilities.
 $string['topcoll:changecolour'] = 'Change or reset the color';
+

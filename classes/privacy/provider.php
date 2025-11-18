@@ -18,17 +18,20 @@
  * Privacy Subsystem implementation for format_topcoll.
  *
  * @package    format_topcoll
+ * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2018-onwards G J Barnard based upon work done by Andrew Nicols <andrew@nicols.co.uk>.
- * @author     G J Barnard - {@link https://moodle.org/user/profile.php?id=442195}
- * @link       https://docs.moodle.org/en/Collapsed_Topics_course_format
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author     G J Barnard - {@link http://moodle.org/user/profile.php?id=442195}
+ * @link       http://docs.moodle.org/en/Collapsed_Topics_course_format
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU Public License
  */
 
 namespace format_topcoll\privacy;
 
-use core_privacy\local\request\writer;
-use core_privacy\local\metadata\collection;
-use format_topcoll\togglelib;
+use \core_privacy\local\request\writer;
+use \core_privacy\local\metadata\collection;
+use \core_privacy\local\request\transform;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Implementation of the privacy subsystem plugin provider.
@@ -39,14 +42,15 @@ class provider implements
 
     // This plugin has some sitewide user preferences to export.
     \core_privacy\local\request\user_preference_provider {
+
     /**
      * Returns meta data about this system.
      *
      * @param   collection $itemcollection The initialised item collection to add items to.
      * @return  collection A listing of user data stored through this system.
      */
-    public static function get_metadata(collection $items): collection {
-        $items->add_user_preference(togglelib::TOPCOLL_TOGGLE, 'privacy:metadata:preference:toggle');
+    public static function get_metadata(collection $items) : collection {
+        $items->add_user_preference(\format_topcoll\toolbox::TOPCOLL_TOGGLE, 'privacy:metadata:preference:toggle');
 
         return $items;
     }
@@ -58,11 +62,11 @@ class provider implements
      */
     public static function export_user_preferences(int $userid) {
         $preferences = get_user_preferences(null, null, $userid);
-        $togglelib = new togglelib();
+        $togglelib = new \format_topcoll\togglelib;
         foreach ($preferences as $name => $value) {
             $courseid = null;
-            if (strpos($name, togglelib::TOPCOLL_TOGGLE) === 0) {
-                $courseid = substr($name, strlen(togglelib::TOPCOLL_TOGGLE) + 1);
+            if (strpos($name, \format_topcoll\toolbox::TOPCOLL_TOGGLE) === 0) {
+                $courseid = substr($name, strlen(\format_topcoll\toolbox::TOPCOLL_TOGGLE) + 1);
 
                 writer::export_user_preference(
                     'format_topcoll',

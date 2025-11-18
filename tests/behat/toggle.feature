@@ -17,7 +17,8 @@ Feature: Toggle
     And the following config values are set as admin:
       | config                | value | plugin         |
       | defaultuserpreference | 0     | format_topcoll |
-    And I am on the "CT" "Course" page logged in as "dennis"
+    And I log in as "dennis"
+    And I am on "CollTop" course homepage
 
   Scenario: Open a toggle
     When I click on "Section 1 - Toggle" "text"
@@ -43,6 +44,6 @@ Feature: Toggle
 
   Scenario: Toggle open after reloading the page
     When I click on "Section 1 - Toggle" "text"
-    And I reload the page
+    And I click on "CT" "link"
     Then "#toggledsection-1" "css_element" should be visible
     And "#toggledsection-2" "css_element" should not be visible

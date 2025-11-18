@@ -23,20 +23,20 @@
  * code change. Full installation instructions, code adaptions and credits are included in the 'Readme.md' file.
  *
  * @package    format_topcoll
+ * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2012-onwards G J Barnard in respect to modifications of standard topics format.
- * @author     G J Barnard - {@link https://moodle.org/user/profile.php?id=442195}
- * @link       https://docs.moodle.org/en/Collapsed_Topics_course_format
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author     G J Barnard - {@link http://moodle.org/user/profile.php?id=442195}
+ * @link       http://docs.moodle.org/en/Collapsed_Topics_course_format
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU Public License
+ *
  */
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/course/format/lib.php'); // For format_base.
 
-/**
- * Format class.
- */
-class format_topcoll extends core_courseformat\base {
-    /** @var array $settings */
+class format_topcoll extends format_base {
+    // Used to determine the type of view URL to generate - parameter or anchor.
+    private $coursedisplay = COURSE_DISPLAY_SINGLEPAGE;
     private $settings;
 
     /**
@@ -54,11 +54,16 @@ class format_topcoll extends core_courseformat\base {
             $courseid = $COURSE->id;  // Save lots of global $COURSE as we will never be the site course.
         }
         parent::__construct($format, $courseid);
+
+        $section = optional_param('section', 0, PARAM_INT);
+        if ($section) {
+            $this->coursedisplay = COURSE_DISPLAY_MULTIPAGE;
+        }
     }
 
     /**
      * Returns the format's settings and gets them if they do not exist.
-     * @return array The settings as an array.
+     * @return type The settings as an array.
      */
     public function get_settings() {
         if (empty($this->settings) == true) {
@@ -66,12 +71,10 @@ class format_topcoll extends core_courseformat\base {
             foreach ($this->settings as $settingname => $settingvalue) {
                 if (isset($settingvalue)) {
                     $settingvtype = gettype($settingvalue);
-                    if (
-                        (($settingvtype == 'string') && ($settingvalue === '-')) ||
-                        (($settingvtype == 'integer') && ($settingvalue === 0))
-                    ) {
+                    if ((($settingvtype == 'string') && ($settingvalue === '-')) ||
+                        (($settingvtype == 'integer') && ($settingvalue === 0))) {
                         // Default value indicator is a hyphen or a number equal to 0.
-                        $this->settings[$settingname] = get_config('format_topcoll', 'default' . $settingname);
+                        $this->settings[$settingname] = get_config('format_topcoll', 'default'.$settingname);
                     }
                 }
             }
@@ -89,119 +92,12 @@ class format_topcoll extends core_courseformat\base {
     }
 
     /**
-     * Indicates this format uses course index.
-     *
-     * @return bool Returns true
-     */
-    public function uses_course_index() {
-        return true;
-    }
-
-    /**
-     * Indicates this format uses indentation.
-     *
-     * @return bool Returns true
-     */
-    public function uses_indentation(): bool {
-        return true;
-    }
-
-    /**
-     * Indicates whether the course format supports the creation of a news forum.
-     *
-     * @return bool
-     */
-    public function supports_news() {
-        return true;
-    }
-
-
-    /**
-     * Returns the information about the ajax support. Topcoll uses ajax.
-     *
-     * @return stdClass
-     */
-    public function supports_ajax() {
-        $ajaxsupport = new stdClass();
-        $ajaxsupport->capable = true;
-        return $ajaxsupport;
-    }
-
-    /**
-     * This format is compatible with the React updates.
-     */
-    public function supports_components() {
-        return true;  // I.e. Allows section drag and drop to work!  Off until I can work out how to make it work!
-    }
-
-    /**
-     * Get the number of sections not counting delegated ones.
-     *
-     * @return int The last section number, or -1 if sections are entirely missing
-     */
-    public function get_last_section_number_without_delegated() {
-        $lastsectionno = parent::get_last_section_number();
-
-        if (!empty($lastsectionno)) {
-            $lastsectionno -= $this->get_number_of_delegated_sections();
-        }
-
-        return $lastsectionno;
-    }
-
-    /**
-     * Method used to get the maximum number of sections for this course format without delegated.
-     * @return int Maximum number of sections.
-     */
-    public function get_max_sections_without_delegated() {
-        $maxsections = $this->get_max_sections();
-
-        if (!empty($maxsections)) {
-            $maxsections -= $this->get_number_of_delegated_sections();
-        }
-
-        return $maxsections;
-    }
-
-    /**
-     * Get the number of delegated sections.
-     *
-     * @return int Number of delegated sections.
-     */
-    protected function get_number_of_delegated_sections() {
-        global $DB;
-        $delegatedcount = 0;
-
-        $subsectionsenabled = $DB->get_field('modules', 'visible', ['name' => 'subsection']);
-        if ($subsectionsenabled) {
-            // Add in our delegated sections.  The 'subsection' table is unreliable in this regard.
-            $modinfo = $this->get_modinfo();
-            $sectioninfos = $modinfo->get_section_info_all();
-            $delegatedcount = 0;
-
-            foreach ($sectioninfos as $sectioninfo) {
-                if (!empty($sectioninfo->component)) {
-                    // Delegated section.
-                    $delegatedcount++;
-                }
-            }
-        }
-
-        return $delegatedcount;
-    }
-
-    /**
      * Gets the name for the provided section.
      *
      * @param int|stdClass $section Section object from database or just field section.section
      * @return string The section name.
      */
     public function get_section_name($section) {
-        // If delegated then return the standard name.
-        if (!empty($section->component)) {
-            return $this->get_delegated_section_name($section);
-        }
-
         $course = $this->get_course();
         // Don't add additional text as called in creating the navigation.
         return $this->get_topcoll_section_name($course, $section, false);
@@ -230,7 +126,7 @@ class format_topcoll extends core_courseformat\base {
     public function get_topcoll_section_name($course, $section, $additional) {
         $thesection = $this->get_section($section);
         if (is_null($thesection)) {
-            $thesection = new stdClass();
+            $thesection = new stdClass;
             $thesection->name = '';
             if (is_object($section)) {
                 $thesection->section = $section->section;
@@ -246,11 +142,9 @@ class format_topcoll extends core_courseformat\base {
 
         // We can't add a node without any text.
         if ((string) $thesection->name !== '') {
-            $o .= format_string($thesection->name, true, ['context' => $context]);
-            if (
-                ($thesection->section != 0) && (($tcsettings['layoutstructure'] == 2) ||
-                ($tcsettings['layoutstructure'] == 3) || ($tcsettings['layoutstructure'] == 5))
-            ) {
+            $o .= format_string($thesection->name, true, array('context' => $context));
+            if (($thesection->section != 0) && (($tcsettings['layoutstructure'] == 2) ||
+                ($tcsettings['layoutstructure'] == 3) || ($tcsettings['layoutstructure'] == 5))) {
                 $o .= ' ';
                 if (empty($tcsectionsettings['donotshowdate'])) {
                     if ($additional == true) { // Break 'br' tags break backups!
@@ -283,7 +177,7 @@ class format_topcoll extends core_courseformat\base {
                 case 3:
                 case 4:
                     // The word 'Toggle'.
-                    $o .= '<div class="cttoggle"> - ' . get_string('topcolltoggle', 'format_topcoll') . '</div>';
+                    $o .= '<div class="cttoggle"> - ' .get_string('topcolltoggle', 'format_topcoll') . '</div>';
                     break;
             }
         }
@@ -291,84 +185,6 @@ class format_topcoll extends core_courseformat\base {
         return $o;
     }
 
-    /**
-     * Returns the display name of the given delegated section.
-     *
-     * @param int|stdClass $section Section object from database or just field section.section.
-     * @return string Display name that the course format prefers, e.g. "Section 2".
-     */
-    protected function get_delegated_section_name($section) {
-        $section = $this->get_section($section);
-        if ((string)$section->name !== '') {
-            return format_string(
-                $section->name,
-                true,
-                ['context' => context_course::instance($this->courseid)]
-            );
-        } else {
-            if ($section->sectionnum == 0) {
-                return get_string('section0name', 'format_topcoll');
-            }
-            return get_string('newsectionname', 'format_topcoll', $section->sectionnum);
-        }
-    }
-
-    /**
-     * Returns if an specific section is visible to the current user.
-     *
-     * Formats can overrride this method to implement any special section logic.
-     *
-     * @param section_info $section the section modinfo
-     * @return bool;
-     */
-    public function is_section_visible(section_info $section): bool {
-        if (($section->section > $this->get_last_section_number_without_delegated()) && (empty($section->component))) {
-            // Stealth section that is not a delegated one.
-            global $PAGE;
-            $context = context_course::instance($this->course->id);
-            if ($PAGE->user_is_editing() && has_capability('moodle/course:update', $context)) {
-                $modinfo = get_fast_modinfo($this->course);
-                // If the stealth section has modules then is visible.
-                return (!empty($modinfo->sections[$section->section]));
-            }
-            // Don't show.
-            return false;
-        }
-        $shown = parent::is_section_visible($section);
-        if (($shown) && ($section->sectionnum == 0)) {
-            // Show section zero if summary has content, otherwise check modules.
-            if (empty(strip_tags($section->summary, ['img']))) { // Allow images to be content.
-                // Don't show section zero if no modules or all modules unavailable to user.
-                $showmovehere = ismoving($this->course->id);
-                if (!$showmovehere) {
-                    global $PAGE;
-                    $context = context_course::instance($this->course->id);
-                    if (!($PAGE->user_is_editing() && has_capability('moodle/course:update', $context))) {
-                        $modshown = false;
-                        $modinfo = get_fast_modinfo($this->course);
-
-                        if (!empty($modinfo->sections[$section->section])) {
-                            foreach ($modinfo->sections[$section->section] as $modnumber) {
-                                $mod = $modinfo->cms[$modnumber];
-                                if ($mod->is_visible_on_course_page()) {
-                                    // At least one is.
-                                    $modshown = true;
-                                    break;
-                                }
-                            }
-                        }
-                        $shown = $modshown;
-                    }
-                }
-            }
-        }
-
-        return $shown;
-    }
-
-    /**
-     * get_section_dates.
-     */
     public function get_section_dates($section, $course = null, $tcsettings = null) {
         if (empty($tcsettings) && empty($course)) {
             return $this->format_topcoll_get_section_dates($section, $this->get_course());
@@ -407,21 +223,83 @@ class format_topcoll extends core_courseformat\base {
         $tcsettings = $this->get_settings();
         $o = '';
 
-        switch ($tcsettings['layoutstructure']) {
+        switch($tcsettings['layoutstructure']) {
             case 1:
             case 4:
                 $o = get_string('layoutstructuretopics', 'format_topcoll');
-                break;
+            break;
             case 2:
             case 3:
                 $o = get_string('layoutstructureweeks', 'format_topcoll');
-                break;
+            break;
             case 5:
                 $o = get_string('layoutstructuredays', 'format_topcoll');
-                break;
+            break;
         }
 
         return $o;
+    }
+
+    /**
+     * The URL to use for the specified course (with section)
+     *
+     * @param int|stdClass $section Section object from database or just field course_sections.section
+     *     if omitted the course view page is returned
+     * @param array $options options for view URL. At the moment core uses:
+     *     'navigation' (bool) if true and section has no separate page, the function returns null
+     *     'sr' (int) used by multipage formats to specify to which section to return
+     * @return null|moodle_url
+     */
+    public function get_view_url($section, $options = array()) {
+        $course = $this->get_course();
+        $url = new moodle_url('/course/view.php', array('id' => $course->id));
+
+        $sr = null;
+        if (array_key_exists('sr', $options)) {
+            $sr = $options['sr'];
+        }
+        if (is_object($section)) {
+            $sectionno = $section->section;
+        } else {
+            $sectionno = $section;
+        }
+        if ($sectionno !== null) {
+            if ($sr !== null) {
+                if ($sr) {
+                    $usercoursedisplay = COURSE_DISPLAY_MULTIPAGE;
+                    $sectionno = $sr;
+                } else {
+                    $usercoursedisplay = COURSE_DISPLAY_SINGLEPAGE;
+                }
+            } else {
+                $usercoursedisplay = $this->coursedisplay;
+            }
+            if ($sectionno != 0 && $usercoursedisplay == COURSE_DISPLAY_MULTIPAGE) {
+                $url->param('section', $sectionno);
+            } else {
+                global $CFG;
+                if (empty($CFG->linkcoursesections) && !empty($options['navigation'])) { // MDL-57412.
+                    return null;
+                }
+                $url->set_anchor('section-' . $sectionno);
+            }
+        }
+        return $url;
+    }
+
+    /**
+     * Returns the information about the ajax support in the given source format
+     *
+     * The returned object's property (boolean)capable indicates that
+     * the course format supports Moodle course ajax features.
+     * The property (array)testedbrowsers can be used as a parameter for {@link ajaxenabled()}.
+     *
+     * @return stdClass
+     */
+    public function supports_ajax() {
+        $ajaxsupport = new stdClass();
+        $ajaxsupport->capable = true;
+        return $ajaxsupport;
     }
 
     /**
@@ -434,14 +312,12 @@ class format_topcoll extends core_courseformat\base {
     public function ajax_section_move() {
         global $PAGE;
 
-        $titles = [];
+        $titles = array();
         $current = -1;  // MDL-33546.
         $weekformat = false;
         $tcsettings = $this->get_settings();
-        if (
-            ($tcsettings['layoutstructure'] == 2) || ($tcsettings['layoutstructure'] == 3) ||
-            ($tcsettings['layoutstructure'] == 5)
-        ) {
+        if (($tcsettings['layoutstructure'] == 2) || ($tcsettings['layoutstructure'] == 3) ||
+            ($tcsettings['layoutstructure'] == 5)) {
             $weekformat = true;
         }
         $course = $this->get_course();
@@ -455,150 +331,54 @@ class format_topcoll extends core_courseformat\base {
                 }
             }
         }
-        return ['sectiontitles' => $titles, 'current' => $current, 'action' => 'move'];
-    }
-
-    /**
-     * The URL to use for the specified course (with section)
-     *
-     * Please note that course view page /course/view.php?id=COURSEID is hardcoded in many
-     * places in core and contributed modules. If course format wants to change the location
-     * of the view script, it is not enough to change just this function. Do not forget
-     * to add proper redirection.
-     *
-     * @param int|stdClass $section Section object from database or just field course_sections.section
-     *     if null the course view page is returned
-     * @param array $options options for view URL. At the moment core uses:
-     *     'navigation' (bool) if true and section not empty, the function returns section page; otherwise, it returns course page.
-     *     'sr' (int) used by course formats to specify to which section to return
-     *     'expanded' (bool) if true the section will be shown expanded, true by default
-     * @return null|moodle_url
-     */
-    public function get_view_url($section, $options = []) {
-        $course = $this->get_course();
-        $url = new moodle_url('/course/view.php', ['id' => $course->id]);
-
-        $sr = false;
-        if (array_key_exists('sr', $options)) {
-            $sectionno = $options['sr'];
-            $sr = true;
-        } else if (is_object($section)) {
-            $sectionno = $section->section;
-        } else {
-            $sectionno = $section;
-        }
-        if ($sectionno !== null) {
-            if (!empty($options['navigation'])) {
-                // Unlike core, navigate to section on course page.
-                $url->set_anchor('section-' . $sectionno);
-            } else if (!empty($options['state'])) {
-                // Navigate to section on course page from course index.
-                // Yes I know this is the same but at this stage I want to be sure.
-                $url->set_anchor('section-' . $sectionno);
-            } else if ((!empty($options['singlenavigation'])) || ($sr)) {
-                $url->param('section', $sectionno);
-            } else {
-                // I know, odd logic but more of an explaination!
-                $url->set_anchor('section-' . $sectionno);
-            }
-        }
-
-        return $url;
+        return array('sectiontitles' => $titles, 'current' => $current, 'action' => 'move');
     }
 
     /**
      * Returns the list of blocks to be automatically added for the newly created course
      *
-     * First we check defaultdisplayblocks to see which of the four default blocks should be displayed,
-     * then build an array of strings that will hold the list of blocks to be displayed.
-     *
      * @return array of default blocks, must contain two keys BLOCK_POS_LEFT and BLOCK_POS_RIGHT
-     *     each of values is an array of block names (for pre and post side columns respectively).
-     *     Confused?  See the definitions in /lib/blocklib.php.
+     *     each of values is an array of block names (for left and right side columns)
      */
     public function get_default_blocks() {
-
-        /* Assign the location side for the blocks. defaultdisplayblocksloc: 1=pre, 2=post
-           Then put the string list of blocks on the side location. */
-        $blocklist = explode(',', get_config('format_topcoll', 'defaultdisplayblocks'));
-        if (empty($blocklist[0])) {
-            return [];
-        }
-        if (get_config('format_topcoll', 'defaultdisplayblocksloc') == 2) {
-            $bpr = $blocklist;
-            $bpl = [];
-        } else {
-            $bpr = [];
-            $bpl = $blocklist;
-        }
-
-        // Return our block list on the correct side.
-        return [
-            BLOCK_POS_RIGHT => $bpr,
-            BLOCK_POS_LEFT => $bpl,
-        ];
+        return array(
+            BLOCK_POS_LEFT => array(),
+            BLOCK_POS_RIGHT => array('search_forums', 'news_items', 'calendar_upcoming', 'recent_activity')
+        );
     }
 
-    /**
-     * Definitions of the additional options that this course format uses for section
-     *
-     * See course_format::course_format_options() for return array definition.
-     *
-     * Additionally section format options may have property 'cache' set to true
-     * if this option needs to be cached in get_fast_modinfo(). The 'cache' property
-     * is recommended to be set only for fields used in course_format::get_section_name(),
-     * course_format::extend_course_navigation() and course_format::get_view_url()
-     *
-     * For better performance cached options are recommended to have 'cachedefault' property
-     * Unlike 'default', 'cachedefault' should be static and not access get_config().
-     *
-     * Regardless of value of 'cache' all options are accessed in the code as
-     * $sectioninfo->OPTIONNAME
-     * where $sectioninfo is instance of section_info, returned by
-     * get_fast_modinfo($course)->get_section_info($sectionnum)
-     * or get_fast_modinfo($course)->get_section_info_all()
-     *
-     * All format options for particular section are returned by calling:
-     * $this->get_format_options($section);
-     *
-     * @param bool $foreditform
-     * @return array
-     */
     public function section_format_options($foreditform = false) {
         static $sectionformatoptions = false;
 
         if ($sectionformatoptions === false) {
-            $sectionformatoptions = [
-                'donotshowdate' => [
+            $sectionformatoptions = array(
+                'donotshowdate' => array(
                     'default' => 0,
-                    'type' => PARAM_INT,
-                ],
-            ];
+                    'type' => PARAM_INT
+                )
+            );
         }
         if ($foreditform && !isset($sectionformatoptions['donotshowdate']['label'])) {
-            $sectionformatoptionsedit = [
-                'donotshowdate' => [
+            $sectionformatoptionsedit = array(
+                'donotshowdate' => array(
                     'label' => new lang_string('donotshowdate', 'format_topcoll'),
                     'help' => 'donotshowdate',
                     'help_component' => 'format_topcoll',
-                    'element_type' => 'checkbox',
-                ],
-            ];
+                    'element_type' => 'checkbox'
+                )
+            );
             $sectionformatoptions = array_merge_recursive($sectionformatoptions, $sectionformatoptionsedit);
         }
 
         $tcsettings = $this->get_settings();
-        if (
-            ($tcsettings['layoutstructure'] == 2) || ($tcsettings['layoutstructure'] == 3) ||
-            ($tcsettings['layoutstructure'] == 5)
-        ) {
+        if (($tcsettings['layoutstructure'] == 2) || ($tcsettings['layoutstructure'] == 3) ||
+            ($tcsettings['layoutstructure'] == 5)) {
             // Weekly layout.
             return $sectionformatoptions;
         } else {
-            return [];
+            return array();
         }
     }
-
     /**
      * Definitions of the additional options that this course format uses for course
      *
@@ -612,113 +392,142 @@ class format_topcoll extends core_courseformat\base {
     public function course_format_options($foreditform = false) {
         static $courseformatoptions = false;
         $courseconfig = null;
-
-        $courseid = $this->get_courseid();
+        $enabledplugins = array();
+        $engagementactivities = array('assign', 'quiz', 'choice', 'feedback', 'lesson', 'data');
+        foreach ($engagementactivities as $plugintype) {
+            if (get_config('format_topcoll', 'coursesectionactivityfurtherinformation'.$plugintype) == 2) {
+                switch ($plugintype) {
+                    case 'assign':
+                        array_push($enabledplugins, 'assignments');
+                        break;
+                    case 'quiz':
+                        array_push($enabledplugins, 'quizzes');
+                        break;
+                    case 'data':
+                        array_push($enabledplugins, 'databases');
+                        break;
+                    case 'choice' || 'feedback' || 'lesson':
+                        array_push($enabledplugins, $plugintype . 's');
+                        break;
+                    default:
+                        coding_exception('Try to process invalid plugin', 'Check the plugintypes that are supported by format_topcoll');
+                }
+            }
+        }
         if ($courseformatoptions === false) {
             $courseconfig = get_config('moodlecourse');
 
-            $courseformatoptions = [
-                'hiddensections' => [
-                    'default' => $courseconfig->hiddensections ?? 0,
+            $courseid = $this->get_courseid();
+            if ($courseid == 1) { // New course.
+                 $defaultnumsections = $courseconfig->numsections;
+            } else { // Existing course that may not have 'numsections' - see get_last_section().
+                global $DB;
+                $defaultnumsections = $DB->get_field_sql('SELECT max(section) from {course_sections}
+                    WHERE course = ?', array($courseid));
+            }
+            $courseformatoptions = array(
+                'numsections' => array(
+                    'default' => $defaultnumsections,
                     'type' => PARAM_INT,
-                ],
-                'displayinstructions' => [
+                ),
+                'hiddensections' => array(
+                    'default' => $courseconfig->hiddensections,
+                    'type' => PARAM_INT,
+                ),
+                'displayinstructions' => array(
                     'default' => 0,
                     'type' => PARAM_INT,
-                ],
-                'layoutelement' => [
+                ),
+                'layoutelement' => array(
                     'default' => 0,
                     'type' => PARAM_INT,
-                ],
-                'layoutstructure' => [
+                ),
+                'layoutstructure' => array(
                     'default' => 0,
                     'type' => PARAM_INT,
-                ],
-                'layoutcolumnorientation' => [
+                ),
+                'layoutcolumns' => array(
                     'default' => 0,
                     'type' => PARAM_INT,
-                ],
-                'layoutcolumns' => [
+                ),
+                'layoutcolumnorientation' => array(
                     'default' => 0,
                     'type' => PARAM_INT,
-                ],
-                'flexiblemodules' => [
+                ),
+                'toggleallenabled' => array(
                     'default' => 0,
                     'type' => PARAM_INT,
-                ],
-                'toggleallenabled' => [
+                ),
+                'viewsinglesectionenabled' => array(
                     'default' => 0,
                     'type' => PARAM_INT,
-                ],
-                'viewsinglesectionenabled' => [
+                ),
+                'togglealignment' => array(
                     'default' => 0,
                     'type' => PARAM_INT,
-                ],
-                'togglealignment' => [
+                ),
+                'toggleiconposition' => array(
                     'default' => 0,
                     'type' => PARAM_INT,
-                ],
-                'toggleiconposition' => [
-                    'default' => 0,
-                    'type' => PARAM_INT,
-                ],
-                'toggleiconset' => [
+                ),
+                'toggleiconset' => array(
                     'default' => '-',
                     'type' => PARAM_ALPHAEXT,
-                ],
-                'toggleiconfontclosed' => [
-                    'default' => '-',
-                    'type' => PARAM_TEXT,
-                ],
-                'toggleiconfontopen' => [
-                    'default' => '-',
-                    'type' => PARAM_TEXT,
-                ],
-                'onesection' => [
+                ),
+                'onesection' => array(
                     'default' => 0,
                     'type' => PARAM_INT,
-                ],
-                'toggleallhover' => [
+                ),
+                'toggleallhover' => array(
                     'default' => 0,
                     'type' => PARAM_INT,
-                ],
-                'toggleforegroundcolour' => [
+                ),
+                'toggleforegroundcolour' => array(
                     'default' => '-',
                     'type' => PARAM_ALPHANUMEXT,
-                ],
-                'toggleforegroundopacity' => [
+                ),
+                'toggleforegroundopacity' => array(
                     'default' => '-',
                     'type' => PARAM_RAW,
-                ],
-                'toggleforegroundhovercolour' => [
+                ),
+                'toggleforegroundhovercolour' => array(
                     'default' => '-',
                     'type' => PARAM_ALPHANUMEXT,
-                ],
-                'toggleforegroundhoveropacity' => [
+                ),
+                'toggleforegroundhoveropacity' => array(
                     'default' => '-',
                     'type' => PARAM_RAW,
-                ],
-                'togglebackgroundcolour' => [
+                ),
+                'togglebackgroundcolour' => array(
                     'default' => '-',
                     'type' => PARAM_ALPHANUMEXT,
-                ],
-                'togglebackgroundopacity' => [
+                ),
+                'togglebackgroundopacity' => array(
                     'default' => '-',
                     'type' => PARAM_RAW,
-                ],
-                'togglebackgroundhovercolour' => [
+                ),
+                'togglebackgroundhovercolour' => array(
                     'default' => '-',
                     'type' => PARAM_ALPHANUMEXT,
-                ],
-                'togglebackgroundhoveropacity' => [
+                ),
+                'togglebackgroundhoveropacity' => array(
                     'default' => '-',
                     'type' => PARAM_RAW,
-                ],
-                'showsectionsummary' => [
+                ),
+                'showsectionsummary' => array(
                     'default' => 0,
-                    'type' => PARAM_INT,
-                ],
-            ];
+                    'type' => PARAM_INT
+                )
+            );
+
+            /* If at least one plugin is set to 'yes' then show config with default of 'yes',
+               otherwise will use the value prevously stored. */
+            if (!empty($enabledplugins)) {
+                $courseformatoptions['showadditionalmoddata'] = array(
+                    'default' => 0,
+                    'type' => PARAM_INT
+                );
+            }
         }
         if ($foreditform && !isset($courseformatoptions['displayinstructions']['label'])) {
             /* Note: Because 'admin_setting_configcolourpicker' in 'settings.php' needs to use a prefixing '#'
@@ -742,41 +551,53 @@ class format_topcoll extends core_courseformat\base {
 
             $context = $this->get_context();
 
+            if (is_null($courseconfig)) {
+                $courseconfig = get_config('moodlecourse');
+            }
+            $sectionmenu = array();
+            for ($i = 0; $i <= $courseconfig->maxsections; $i++) {
+                $sectionmenu[$i] = "$i";
+            }
             $displayinstructionsvalues = $this->generate_default_entry(
                 'displayinstructions',
                 0,
-                [
+                array(
                     1 => new lang_string('no'),
-                    2 => new lang_string('yes'),
-                ]
+                    2 => new lang_string('yes')
+                )
             );
-            $courseformatoptionsedit = [
-                'hiddensections' => [
+            $courseformatoptionsedit = array(
+                'numsections' => array(
+                    'label' => new lang_string('numbersections', 'format_topcoll'),
+                    'element_type' => 'select',
+                    'element_attributes' => array($sectionmenu),
+                ),
+                'hiddensections' => array(
                     'label' => new lang_string('hiddensections'),
                     'help' => 'hiddensections',
                     'help_component' => 'moodle',
                     'element_type' => 'select',
-                    'element_attributes' => [
-                        [
+                    'element_attributes' => array(
+                        array(
                             0 => new lang_string('hiddensectionscollapsed'),
-                            1 => new lang_string('hiddensectionsinvisible'),
-                        ],
-                    ],
-                ],
-                'displayinstructions' => [
+                            1 => new lang_string('hiddensectionsinvisible')
+                        )
+                    ),
+                ),
+                'displayinstructions' => array(
                     'label' => new lang_string('displayinstructions', 'format_topcoll'),
                     'help' => 'displayinstructions',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'select',
-                    'element_attributes' => [$displayinstructionsvalues],
-                ],
-            ];
+                    'element_attributes' => array($displayinstructionsvalues)
+                )
+            );
             if (has_capability('format/topcoll:changelayout', $context)) {
                 $layoutelementvalues = $this->generate_default_entry(
                     'layoutelement',
                     0,
                     // In insertion order and not numeric for sorting purposes.
-                     [
+                     array(
                         // Toggle word, toggle section x and section number.
                         1 => new lang_string('setlayout_all', 'format_topcoll'),
                         // Toggle word and toggle section x.
@@ -792,20 +613,20 @@ class format_topcoll extends core_courseformat\base {
                         // Section number.
                         6 => new lang_string('setlayout_section_number', 'format_topcoll'),
                         // No additions.
-                        7 => new lang_string('setlayout_no_additions', 'format_topcoll'),
-                    ]
+                        7 => new lang_string('setlayout_no_additions', 'format_topcoll')
+                    )
                 );
-                $courseformatoptionsedit['layoutelement'] = [
+                $courseformatoptionsedit['layoutelement'] = array(
                     'label' => new lang_string('setlayoutelements', 'format_topcoll'),
                     'help' => 'setlayoutelements',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'select',
-                    'element_attributes' => [$layoutelementvalues],
-                ];
+                    'element_attributes' => array($layoutelementvalues)
+                );
                 $layoutstructurevalues = $this->generate_default_entry(
                     'layoutstructure',
                     0,
-                    [
+                    array(
                         // Topic.
                         1 => new lang_string('setlayoutstructuretopic', 'format_topcoll'),
                         // Week.
@@ -815,269 +636,241 @@ class format_topcoll extends core_courseformat\base {
                         // Current Topic First.
                         4 => new lang_string('setlayoutstructurecurrenttopicfirst', 'format_topcoll'),
                         // Day.
-                        5 => new lang_string('setlayoutstructureday', 'format_topcoll'),
-                    ]
+                        5 => new lang_string('setlayoutstructureday', 'format_topcoll')
+                    )
                 );
-                $courseformatoptionsedit['layoutstructure'] = [
+                $courseformatoptionsedit['layoutstructure'] = array(
                     'label' => new lang_string('setlayoutstructure', 'format_topcoll'),
                     'help' => 'setlayoutstructure',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'select',
-                    'element_attributes' => [$layoutstructurevalues],
-                ];
-                $layoutcolumnorientationvalues = $this->generate_default_entry(
-                    'layoutcolumnorientation',
-                    0,
-                    [
-                        3 => new lang_string('columndynamic', 'format_topcoll'),
-                        2 => new lang_string('columnhorizontal', 'format_topcoll'),
-                        1 => new lang_string('columnvertical', 'format_topcoll'),
-                    ]
+                    'element_attributes' => array($layoutstructurevalues)
                 );
-                $courseformatoptionsedit['layoutcolumnorientation'] = [
-                    'label' => new lang_string('setlayoutcolumnorientation', 'format_topcoll'),
-                    'help' => 'setlayoutcolumnorientation',
-                    'help_component' => 'format_topcoll',
-                    'element_type' => 'select',
-                    'element_attributes' => [$layoutcolumnorientationvalues],
-                ];
                 $layoutcolumnsvalues = $this->generate_default_entry(
                     'layoutcolumns',
                     0,
-                    [
+                    array(
                         1 => new lang_string('one', 'format_topcoll'),
                         2 => new lang_string('two', 'format_topcoll'),
                         3 => new lang_string('three', 'format_topcoll'),
-                        4 => new lang_string('four', 'format_topcoll'),
-                    ]
+                        4 => new lang_string('four', 'format_topcoll')
+                    )
                 );
-                $courseformatoptionsedit['layoutcolumns'] = [
+                $courseformatoptionsedit['layoutcolumns'] = array(
                     'label' => new lang_string('setlayoutcolumns', 'format_topcoll'),
                     'help' => 'setlayoutcolumns',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'select',
-                    'element_attributes' => [$layoutcolumnsvalues],
-                ];
-                $flexiblemodulesvalues = $this->generate_default_entry(
-                    'flexiblemodules',
-                    0,
-                    [
-                        1 => new lang_string('no'),
-                        2 => new lang_string('yes'),
-                    ]
+                    'element_attributes' => array($layoutcolumnsvalues)
                 );
-                $courseformatoptionsedit['flexiblemodules'] = [
-                    'label' => new lang_string('setflexiblemodules', 'format_topcoll'),
-                    'help' => 'setflexiblemodules',
+                $layoutcolumnorientationvalues = $this->generate_default_entry(
+                    'layoutcolumnorientation',
+                    0,
+                    array(
+                        1 => new lang_string('no'),
+                        2 => new lang_string('yes')
+                    )
+                );
+                $courseformatoptionsedit['layoutcolumnorientation'] = array(
+                    'label' => new lang_string('setlayoutcolumnorientation', 'format_topcoll'),
+                    'help' => 'setlayoutcolumnorientation',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'select',
-                    'element_attributes' => [$flexiblemodulesvalues],
-                ];
+                    'element_attributes' => array($layoutcolumnorientationvalues)
+                );
                 $toggleallenabledvalues = $this->generate_default_entry(
                     'toggleallenabled',
                     0,
-                    [
+                    array(
                         1 => new lang_string('no'),
-                        2 => new lang_string('yes'),
-                    ]
+                        2 => new lang_string('yes')
+                    )
                 );
-                $courseformatoptionsedit['toggleallenabled'] = [
+                $courseformatoptionsedit['toggleallenabled'] = array(
                     'label' => new lang_string('settoggleallenabled', 'format_topcoll'),
                     'help' => 'settoggleallenabled',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'select',
-                    'element_attributes' => [$toggleallenabledvalues],
-                ];
+                    'element_attributes' => array($toggleallenabledvalues)
+                );
                 $viewsinglesectionenabledvalues = $this->generate_default_entry(
                     'viewsinglesectionenabled',
                     0,
-                    [
+                    array(
                         1 => new lang_string('no'),
-                        2 => new lang_string('yes'),
-                    ]
+                        2 => new lang_string('yes')
+                    )
                 );
-                $courseformatoptionsedit['viewsinglesectionenabled'] = [
+                $courseformatoptionsedit['viewsinglesectionenabled'] = array(
                     'label' => new lang_string('setviewsinglesectionenabled', 'format_topcoll'),
                     'help' => 'setviewsinglesectionenabled',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'select',
-                    'element_attributes' => [$viewsinglesectionenabledvalues],
-                ];
+                    'element_attributes' => array($viewsinglesectionenabledvalues)
+                );
                 $toggleiconpositionvalues = $this->generate_default_entry(
                     'toggleiconposition',
                     0,
-                    [
-                        1 => new lang_string('start', 'format_topcoll'),
-                        2 => new lang_string('end', 'format_topcoll'),
-                    ]
+                    array(
+                        1 => new lang_string('left', 'format_topcoll'),
+                        2 => new lang_string('right', 'format_topcoll')
+                    )
                 );
-                $courseformatoptionsedit['toggleiconposition'] = [
+                $courseformatoptionsedit['toggleiconposition'] = array(
                     'label' => new lang_string('settoggleiconposition', 'format_topcoll'),
                     'help' => 'settoggleiconposition',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'select',
-                    'element_attributes' => [$toggleiconpositionvalues],
-                ];
+                    'element_attributes' => array($toggleiconpositionvalues)
+                );
                 $onesectionvalues = $this->generate_default_entry(
                     'onesection',
                     0,
-                    [
+                    array(
                         1 => new lang_string('no'),
-                        2 => new lang_string('yes'),
-                    ]
+                        2 => new lang_string('yes')
+                    )
                 );
-                $courseformatoptionsedit['onesection'] = [
+                $courseformatoptionsedit['onesection'] = array(
                     'label' => new lang_string('onesection', 'format_topcoll'),
                     'help' => 'onesection',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'select',
-                    'element_attributes' => [$onesectionvalues],
-                ];
+                    'element_attributes' => array($onesectionvalues)
+                );
                 $showsectionsummaryvalues = $this->generate_default_entry(
                     'showsectionsummary',
                     0,
-                    [
+                    array(
                         1 => new lang_string('no'),
-                        2 => new lang_string('yes'),
-                    ]
+                        2 => new lang_string('yes')
+                    )
                 );
-                $courseformatoptionsedit['showsectionsummary'] = [
+                $courseformatoptionsedit['showsectionsummary'] = array(
                     'label' => new lang_string('setshowsectionsummary', 'format_topcoll'),
                     'help' => 'setshowsectionsummary',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'select',
-                    'element_attributes' => [$showsectionsummaryvalues],
-                ];
+                    'element_attributes' => array($showsectionsummaryvalues)
+                );
+                if (!empty($enabledplugins)) {
+                    $showadditionalmoddatavalues = $this->generate_default_entry(
+                        'showadditionalmoddata',
+                        0,
+                        array(
+                            1 => new lang_string('no'),
+                            2 => new lang_string('yes')
+                        )
+                    );
+                    $stringenabled = implode(', ', $enabledplugins);
+                    $portion = strrchr($stringenabled, ',');
+                    $stringenabled = str_replace($portion, (" and" . substr($portion, 1)), $stringenabled);
+                    $courseformatoptionsedit['showadditionalmoddata'] = array(
+                        'label' => new lang_string('showadditionalmoddata', 'format_topcoll', $stringenabled),
+                        'help' => 'showadditionalmoddata',
+                        'help_component' => 'format_topcoll',
+                        'element_type' => 'select',
+                        'element_attributes' => array($showadditionalmoddatavalues)
+                    );
+                }
             } else {
-                $courseformatoptionsedit['layoutelement'] = [
-                    'label' => 0, 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['layoutstructure'] = [
-                    'label' => 0, 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['layoutcolumns'] = [
-                    'label' => 0, 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['layoutcolumnorientation'] = [
-                    'label' => 0, 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['flexiblemodules'] = [
-                    'label' => 0, 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['toggleallenabled'] = [
-                    'label' => 0, 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['viewsinglesectionenabled'] = [
-                    'label' => 0, 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['toggleiconposition'] = [
-                    'label' => 0, 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['onesection'] = [
-                    'label' => 0, 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['showsectionsummary'] = [
-                    'label' => 0, 'element_type' => 'hidden', ];
+                $courseformatoptionsedit['layoutelement'] = array(
+                    'label' => 0, 'element_type' => 'hidden');
+                $courseformatoptionsedit['layoutstructure'] = array(
+                    'label' => 0, 'element_type' => 'hidden');
+                $courseformatoptionsedit['layoutcolumns'] = array(
+                    'label' => 0, 'element_type' => 'hidden');
+                $courseformatoptionsedit['layoutcolumnorientation'] = array(
+                    'label' => 0, 'element_type' => 'hidden');
+                $courseformatoptionsedit['toggleallenabled'] = array(
+                    'label' => 0, 'element_type' => 'hidden');
+                $courseformatoptionsedit['viewsinglesectionenabled'] = array(
+                    'label' => 0, 'element_type' => 'hidden');
+                $courseformatoptionsedit['toggleiconposition'] = array(
+                    'label' => 0, 'element_type' => 'hidden');
+                $courseformatoptionsedit['onesection'] = array(
+                    'label' => 0, 'element_type' => 'hidden');
+                $courseformatoptionsedit['showsectionsummary'] = array(
+                    'label' => 0, 'element_type' => 'hidden');
+                if (!empty($enabledplugins)) {
+                    $courseformatoptionsedit['showadditionalmoddata'] = array(
+                        'label' => 0, 'element_type' => 'hidden');
+                }
             }
 
             if (has_capability('format/topcoll:changetogglealignment', $context)) {
                 $togglealignmentvalues = $this->generate_default_entry(
                     'togglealignment',
                     0,
-                    [
-                        1 => new lang_string('start', 'format_topcoll'),
+                    array(
+                        1 => new lang_string('left', 'format_topcoll'),
                         2 => new lang_string('center', 'format_topcoll'),
-                        3 => new lang_string('end', 'format_topcoll'),
-                    ]
+                        3 => new lang_string('right', 'format_topcoll')
+                    )
                 );
-                $courseformatoptionsedit['togglealignment'] = [
+                $courseformatoptionsedit['togglealignment'] = array(
                     'label' => new lang_string('settogglealignment', 'format_topcoll'),
                     'help' => 'settogglealignment',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'select',
-                    'element_attributes' => [$togglealignmentvalues],
-                ];
+                    'element_attributes' => array($togglealignmentvalues)
+                );
             } else {
-                $courseformatoptionsedit['togglealignment'] = [
-                    'label' => get_config('format_topcoll', 'defaulttogglealignment'), 'element_type' => 'hidden', ];
+                $courseformatoptionsedit['togglealignment'] = array(
+                    'label' => get_config('format_topcoll', 'defaulttogglealignment'), 'element_type' => 'hidden');
             }
             if (has_capability('format/topcoll:changetoggleiconset', $context)) {
-                global $OUTPUT;
                 $toggleiconsetvalues = $this->generate_default_entry(
                     'toggleiconset',
                     '-',
-                    [
-                        'arrow' => new lang_string('arrow', 'format_topcoll'), // Arrow icon set.
-                        'bulb' => new lang_string('bulb', 'format_topcoll'), // Bulb icon set.
-                        'cloud' => new lang_string('cloud', 'format_topcoll'), // Cloud icon set.
-                        'eye' => new lang_string('eye', 'format_topcoll'), // Eye icon set.
-                        'folder' => new lang_string('folder', 'format_topcoll'), // Folder icon set.
+                    array(
+                        'arrow' => new lang_string('arrow', 'format_topcoll'),               // Arrow icon set.
+                        'bulb' => new lang_string('bulb', 'format_topcoll'),                 // Bulb icon set.
+                        'cloud' => new lang_string('cloud', 'format_topcoll'),               // Cloud icon set.
+                        'eye' => new lang_string('eye', 'format_topcoll'),                   // Eye icon set.
+                        'folder' => new lang_string('folder', 'format_topcoll'),             // Folder icon set.
                         'groundsignal' => new lang_string('groundsignal', 'format_topcoll'), // Ground signal set.
-                        'led' => new lang_string('led', 'format_topcoll'), // LED icon set.
-                        'point' => new lang_string('point', 'format_topcoll'), // Point icon set.
-                        'power' => new lang_string('power', 'format_topcoll'), // Power icon set.
-                        'radio' => new lang_string('radio', 'format_topcoll'), // Radio icon set.
-                        'smiley' => new lang_string('smiley', 'format_topcoll'), // Smiley icon set.
-                        'square' => new lang_string('square', 'format_topcoll'), // Square icon set.
-                        'sunmoon' => new lang_string('sunmoon', 'format_topcoll'), // Sun / Moon icon set.
-                        'switch' => new lang_string('switch', 'format_topcoll'), // Switch icon set.
-                        'tif' => new lang_string('tif', 'format_topcoll'), // Toggle icon font.
-                    ]
+                        'led' => new lang_string('led', 'format_topcoll'),                   // LED icon set.
+                        'point' => new lang_string('point', 'format_topcoll'),               // Point icon set.
+                        'power' => new lang_string('power', 'format_topcoll'),               // Power icon set.
+                        'radio' => new lang_string('radio', 'format_topcoll'),               // Radio icon set.
+                        'smiley' => new lang_string('smiley', 'format_topcoll'),             // Smiley icon set.
+                        'square' => new lang_string('square', 'format_topcoll'),             // Square icon set.
+                        'sunmoon' => new lang_string('sunmoon', 'format_topcoll'),           // Sun / Moon icon set.
+                        'switch' => new lang_string('switch', 'format_topcoll')              // Switch icon set.
+                    )
                 );
-                $iconseticons = [
-                    'arrow' => $OUTPUT->pix_icon('arrow_right', get_string('arrow', 'format_topcoll'), 'format_topcoll'),
-                    'bulb' => $OUTPUT->pix_icon('bulb_off', get_string('bulb', 'format_topcoll'), 'format_topcoll'),
-                    'cloud' => $OUTPUT->pix_icon('cloud_off', get_string('cloud', 'format_topcoll'), 'format_topcoll'),
-                    'eye' => $OUTPUT->pix_icon('eye_show', get_string('eye', 'format_topcoll'), 'format_topcoll'),
-                    'folder' => $OUTPUT->pix_icon('folder_closed', get_string('folder', 'format_topcoll'), 'format_topcoll'),
-                    'groundsignal' => $OUTPUT->pix_icon('ground_signal_off', get_string('groundsignal', 'format_topcoll'), 'format_topcoll'),
-                    'led' => $OUTPUT->pix_icon('led_on', get_string('led', 'format_topcoll'), 'format_topcoll'),
-                    'point' => $OUTPUT->pix_icon('point_right', get_string('point', 'format_topcoll'), 'format_topcoll'),
-                    'power' => $OUTPUT->pix_icon('toggle_plus', get_string('power', 'format_topcoll'), 'format_topcoll'),
-                    'radio' => $OUTPUT->pix_icon('radio_on', get_string('radio', 'format_topcoll'), 'format_topcoll'),
-                    'smiley' => $OUTPUT->pix_icon('smiley_on', get_string('smiley', 'format_topcoll'), 'format_topcoll'),
-                    'square' => $OUTPUT->pix_icon('square_on', get_string('square', 'format_topcoll'), 'format_topcoll'),
-                    'sunmoon' => $OUTPUT->pix_icon('sunmoon_on', get_string('sunmoon', 'format_topcoll'), 'format_topcoll'),
-                    'switch' => $OUTPUT->pix_icon('switch_on', get_string('switch', 'format_topcoll'), 'format_topcoll'),
-                    'tif' => $OUTPUT->pix_icon('iconfont', get_string('tif', 'format_topcoll'), 'format_topcoll'),
-                ];
-                $courseformatoptionsedit['toggleiconset'] = [
+                $courseformatoptionsedit['toggleiconset'] = array(
                     'label' => new lang_string('settoggleiconset', 'format_topcoll'),
-                    'ct_help' => ['help' => 'settoggleiconset', 'a' => $iconseticons],
+                    'help' => 'settoggleiconset',
+                    'help_component' => 'format_topcoll',
                     'element_type' => 'select',
-                    'element_attributes' => [$toggleiconsetvalues],
-                ];
-                $courseformatoptionsedit['toggleiconfontclosed'] = [
-                    'label' => new lang_string('settoggleiconfontclosed', 'format_topcoll'),
-                    'help' => 'settoggleiconfontclosed',
-                    'help_component' => 'format_topcoll',
-                    'element_type' => 'text',
-                ];
-                $courseformatoptionsedit['toggleiconfontopen'] = [
-                    'label' => new lang_string('settoggleiconfontopen', 'format_topcoll'),
-                    'help' => 'settoggleiconfontopen',
-                    'help_component' => 'format_topcoll',
-                    'element_type' => 'text',
-                ];
+                    'element_attributes' => array($toggleiconsetvalues)
+                );
                 $toggleallhovervalues = $this->generate_default_entry(
                     'toggleallhover',
                     0,
-                    [
+                    array(
                         1 => new lang_string('no'),
-                        2 => new lang_string('yes'),
-                    ]
+                        2 => new lang_string('yes')
+                    )
                 );
-                $courseformatoptionsedit['toggleallhover'] = [
+                $courseformatoptionsedit['toggleallhover'] = array(
                     'label' => new lang_string('settoggleallhover', 'format_topcoll'),
                     'help' => 'settoggleallhover',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'select',
-                    'element_attributes' => [$toggleallhovervalues],
-                ];
+                    'element_attributes' => array($toggleallhovervalues)
+                );
             } else {
-                $courseformatoptionsedit['toggleiconset'] = [
-                    'label' => '-', 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['toggleiconfontclosed'] = [
-                    'label' => '-', 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['toggleiconfontopen'] = [
-                    'label' => '-', 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['toggleallhover'] = [
-                    'label' => 0, 'element_type' => 'hidden', ];
+                $courseformatoptionsedit['toggleiconset'] = array(
+                    'label' => '-', 'element_type' => 'hidden');
+                $courseformatoptionsedit['toggleallhover'] = array(
+                    'label' => 0, 'element_type' => 'hidden');
             }
 
             if (has_capability('format/topcoll:changecolour', $context)) {
-                $opacityvalues = [
+                $opacityvalues = array(
                     '-' => '',
                     '0.0' => '0.0',
                     '0.1' => '0.1',
@@ -1089,129 +882,113 @@ class format_topcoll extends core_courseformat\base {
                     '0.7' => '0.7',
                     '0.8' => '0.8',
                     '0.9' => '0.9',
-                    '1.0' => '1.0',
-                ];
-                $courseformatoptionsedit['toggleforegroundcolour'] = [
+                    '1.0' => '1.0'
+                );
+                $courseformatoptionsedit['toggleforegroundcolour'] = array(
                     'label' => new lang_string('settoggleforegroundcolour', 'format_topcoll'),
                     'help' => 'settoggleforegroundcolour',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'tccolourpopup',
-                    'element_attributes' => [
-                        [
+                    'element_attributes' => array(
+                        array(
                             'defaultcolour' => $defaulttgfgcolour,
-                            'value' => $defaulttgfgcolour,
-                        ],
-                    ],
-                ];
-                $opacityvalues['-'] = new lang_string(
-                    'default',
-                    'format_topcoll',
-                    get_config('format_topcoll', 'defaulttoggleforegroundopacity')
+                            'value' => $defaulttgfgcolour
+                        )
+                    )
                 );
-                $courseformatoptionsedit['toggleforegroundopacity'] = [
+                $opacityvalues['-'] = new lang_string('default', 'format_topcoll', get_config('format_topcoll', 'defaulttoggleforegroundopacity'));
+                $courseformatoptionsedit['toggleforegroundopacity'] = array(
                     'label' => new lang_string('settoggleforegroundopacity', 'format_topcoll'),
                     'help' => 'settoggleforegroundopacity',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'select',
-                    'element_attributes' => [$opacityvalues],
-                ];
-                $courseformatoptionsedit['toggleforegroundhovercolour'] = [
+                    'element_attributes' => array($opacityvalues)
+                );
+                $courseformatoptionsedit['toggleforegroundhovercolour'] = array(
                     'label' => new lang_string('settoggleforegroundhovercolour', 'format_topcoll'),
                     'help' => 'settoggleforegroundhovercolour',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'tccolourpopup',
-                    'element_attributes' => [
-                        [
+                    'element_attributes' => array(
+                        array(
                             'defaultcolour' => $defaulttgfghvrcolour,
-                            'value' => $defaulttgfghvrcolour,
-                        ],
-                    ],
-                ];
-                $opacityvalues['-'] = new lang_string(
-                    'default',
-                    'format_topcoll',
-                    get_config('format_topcoll', 'defaulttoggleforegroundhoveropacity')
+                            'value' => $defaulttgfghvrcolour
+                        )
+                    )
                 );
-                $courseformatoptionsedit['toggleforegroundhoveropacity'] = [
+                $opacityvalues['-'] = new lang_string('default', 'format_topcoll', get_config('format_topcoll', 'defaulttoggleforegroundhoveropacity'));
+                $courseformatoptionsedit['toggleforegroundhoveropacity'] = array(
                     'label' => new lang_string('settoggleforegroundhoveropacity', 'format_topcoll'),
                     'help' => 'settoggleforegroundhoveropacity',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'select',
-                    'element_attributes' => [$opacityvalues],
-                ];
-                $courseformatoptionsedit['togglebackgroundcolour'] = [
+                    'element_attributes' => array($opacityvalues)
+                );
+                $courseformatoptionsedit['togglebackgroundcolour'] = array(
                     'label' => new lang_string('settogglebackgroundcolour', 'format_topcoll'),
                     'help' => 'settogglebackgroundcolour',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'tccolourpopup',
-                    'element_attributes' => [
-                        [
+                    'element_attributes' => array(
+                        array(
                             'defaultcolour' => $defaulttgbgcolour,
-                            'value' => $defaulttgbgcolour,
-                        ],
-                    ],
-                ];
-                $opacityvalues['-'] = new lang_string(
-                    'default',
-                    'format_topcoll',
-                    get_config('format_topcoll', 'defaulttogglebackgroundopacity')
+                            'value' => $defaulttgbgcolour
+                        )
+                    )
                 );
-                $courseformatoptionsedit['togglebackgroundopacity'] = [
+                $opacityvalues['-'] = new lang_string('default', 'format_topcoll', get_config('format_topcoll', 'defaulttogglebackgroundopacity'));
+                $courseformatoptionsedit['togglebackgroundopacity'] = array(
                     'label' => new lang_string('settogglebackgroundopacity', 'format_topcoll'),
                     'help' => 'settogglebackgroundopacity',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'select',
-                    'element_attributes' => [$opacityvalues],
-                ];
-                $courseformatoptionsedit['togglebackgroundhovercolour'] = [
+                    'element_attributes' => array($opacityvalues)
+                );
+                $courseformatoptionsedit['togglebackgroundhovercolour'] = array(
                     'label' => new lang_string('settogglebackgroundhovercolour', 'format_topcoll'),
                     'help' => 'settogglebackgroundhovercolour',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'tccolourpopup',
-                    'element_attributes' => [
-                        [
+                    'element_attributes' => array(
+                        array(
                             'defaultcolour' => $defaulttgbghvrcolour,
-                            'value' => $defaulttgbghvrcolour,
-                        ],
-                    ],
-                ];
-                $opacityvalues['-'] = new lang_string(
-                    'default',
-                    'format_topcoll',
-                    get_config('format_topcoll', 'defaulttogglebackgroundhoveropacity')
+                            'value' => $defaulttgbghvrcolour
+                        )
+                    )
                 );
-                $courseformatoptionsedit['togglebackgroundhoveropacity'] = [
+                $opacityvalues['-'] = new lang_string('default', 'format_topcoll', get_config('format_topcoll', 'defaulttogglebackgroundhoveropacity'));
+                $courseformatoptionsedit['togglebackgroundhoveropacity'] = array(
                     'label' => new lang_string('settogglebackgroundhoveropacity', 'format_topcoll'),
                     'help' => 'settogglebackgroundhoveropacity',
                     'help_component' => 'format_topcoll',
                     'element_type' => 'select',
-                    'element_attributes' => [$opacityvalues],
-                ];
+                    'element_attributes' => array($opacityvalues)
+                );
             } else {
-                $courseformatoptionsedit['toggleforegroundcolour'] = [
-                    'label' => '-', 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['toggleforegroundopacity'] = [
-                    'label' => '-', 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['toggleforegroundhovercolour'] = [
-                    'label' => '-', 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['toggleforegroundhoveropacity'] = [
-                    'label' => '-', 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['togglebackgroundcolour'] = [
-                    'label' => '-', 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['togglebackgroundopacity'] = [
-                    'label' => '-', 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['togglebackgroundhovercolour'] = [
-                    'label' => '-', 'element_type' => 'hidden', ];
-                $courseformatoptionsedit['togglebackgroundhoveropacity'] = [
-                    'label' => '-', 'element_type' => 'hidden', ];
+                $courseformatoptionsedit['toggleforegroundcolour'] = array(
+                    'label' => '-', 'element_type' => 'hidden');
+                $courseformatoptionsedit['toggleforegroundopacity'] = array(
+                    'label' => '-', 'element_type' => 'hidden');
+                $courseformatoptionsedit['toggleforegroundhovercolour'] = array(
+                    'label' => '-', 'element_type' => 'hidden');
+                $courseformatoptionsedit['toggleforegroundhoveropacity'] = array(
+                    'label' => '-', 'element_type' => 'hidden');
+                $courseformatoptionsedit['togglebackgroundcolour'] = array(
+                    'label' => '-', 'element_type' => 'hidden');
+                $courseformatoptionsedit['togglebackgroundopacity'] = array(
+                    'label' => '-', 'element_type' => 'hidden');
+                $courseformatoptionsedit['togglebackgroundhovercolour'] = array(
+                    'label' => '-', 'element_type' => 'hidden');
+                $courseformatoptionsedit['togglebackgroundhoveropacity'] = array(
+                    'label' => '-', 'element_type' => 'hidden');
             }
             $readme = new moodle_url('/course/format/topcoll/Readme.md');
-            $readme = html_writer::link($readme, 'Readme.md', ['target' => '_blank']);
-            $courseformatoptionsedit['readme'] = [
+            $readme = html_writer::link($readme, 'Readme.md', array('target' => '_blank'));
+            $courseformatoptionsedit['readme'] = array(
                     'label' => get_string('readme_title', 'format_topcoll'),
                     'element_type' => 'static',
-                    'element_attributes' => [get_string('readme_desc', 'format_topcoll', ['url' => $readme])],
-                ];
+                    'element_attributes' => array(get_string('readme_desc', 'format_topcoll', array('url' => $readme)))
+                );
             $courseformatoptions = array_merge_recursive($courseformatoptions, $courseformatoptionsedit);
         }
         return $courseformatoptions;
@@ -1226,10 +1003,10 @@ class format_topcoll extends core_courseformat\base {
      * @return array Updated value array with the added default entry.
      */
     private function generate_default_entry($settingname, $defaultindex, $values) {
-        $defaultvalue = get_config('format_topcoll', 'default' . $settingname);
-        $defarray = [$defaultindex => new lang_string('default', 'format_topcoll', $values[$defaultvalue])];
+        $defaultvalue = get_config('format_topcoll', 'default'.$settingname);
+        $defarray = array($defaultindex => new lang_string('default', 'format_topcoll', $values[$defaultvalue]));
 
-        return array_replace($defarray, $values);
+        return array_merge($defarray, $values);
     }
 
     /**
@@ -1242,45 +1019,27 @@ class format_topcoll extends core_courseformat\base {
      * @return array array of references to the added form elements
      */
     public function create_edit_form_elements(&$mform, $forsection = false) {
-        global $CFG, $COURSE, $OUTPUT, $USER;
-        MoodleQuickForm::registerElementType(
-            'tccolourpopup',
-            "$CFG->dirroot/course/format/topcoll/js/tc_colourpopup.php",
-            'MoodleQuickForm_tccolourpopup'
-        );
+        global $CFG, $OUTPUT, $PAGE, $USER;
+        MoodleQuickForm::registerElementType('tccolourpopup', "$CFG->dirroot/course/format/topcoll/js/tc_colourpopup.php",
+                                             'MoodleQuickForm_tccolourpopup');
 
         $elements = parent::create_edit_form_elements($mform, $forsection);
 
-        // A way of having help strings with the 'a' additional parameter.
+        // Increase the number of sections combo box values if the user has increased the number of sections
+        // using the icon on the course page beyond course 'maxsections' or course 'maxsections' has been
+        // reduced below the number of sections already set for the course on the site administration course
+        // defaults page.  This is so that the number of sections is not reduced leaving unintended orphaned
+        // activities / resources.
         if (!$forsection) {
-            $options = $this->course_format_options(true);
-            foreach ($options as $optionname => $option) {
-                if (isset($option['ct_help'])) {
-                    $mform->addHelpButton(
-                        $optionname,
-                        $option['ct_help']['help'],
-                        'format_topcoll',
-                        '',
-                        false,
-                        $option['ct_help']['a']
-                    );
+            $maxsections = get_config('moodlecourse', 'maxsections');
+            $numsections = $mform->getElementValue('numsections');
+            $numsections = $numsections[0];
+            if ($numsections > $maxsections) {
+                $element = $mform->getElement('numsections');
+                for ($i = $maxsections + 1; $i <= $numsections; $i++) {
+                    $element->addOption("$i", $i);
                 }
             }
-        }
-
-        if (!$forsection && (empty($COURSE->id) || $COURSE->id == SITEID)) {
-            // Add "numsections" element to the create course form - it will force new course to be prepopulated
-            // with empty sections.
-            // The "Number of sections" option is no longer available when editing course, instead teachers should
-            // delete and add sections when needed.
-            $courseconfig = get_config('moodlecourse');
-            $max = (int)$courseconfig->maxsections;
-            $element = $mform->addElement('select', 'numsections', get_string('numberweeks'), range(0, $max ?: 52));
-            $mform->setType('numsections', PARAM_INT);
-            if (is_null($mform->getElementValue('numsections'))) {
-                $mform->setDefault('numsections', $courseconfig->numsections);
-            }
-            array_unshift($elements, $element);
         }
 
         $context = $this->get_context();
@@ -1294,70 +1053,121 @@ class format_topcoll extends core_courseformat\base {
         $elements[] = $mform->addElement('header', 'ctreset', get_string('ctreset', 'format_topcoll'));
         $mform->addHelpButton('ctreset', 'ctreset', 'format_topcoll', '', true);
 
-        $resetelements = [];
-        $checkboxname = get_string('resetdisplayinstructions', 'format_topcoll');
-        $resetelements[] = & $mform->createElement('checkbox', 'resetdisplayinstructions', '', $checkboxname);
-        $resetelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetdisplayinstructions', 'format_topcoll'));
+        $bsfour = false;
+        if (strcmp($PAGE->theme->name, 'boost') === 0) {
+            $bsfour = true;
+        } else if (!empty($PAGE->theme->parents)) {
+            if (in_array('boost', $PAGE->theme->parents) === true) {
+                $bsfour = true;
+            }
+        } else if (strcmp($PAGE->theme->name, 'foundation') === 0) {
+            $bsfour = true;
+        }
+
+        $resetelements = array();
+        if ($bsfour) {
+            $checkboxname = get_string('resetdisplayinstructions', 'format_topcoll');
+            $resetelements[] = & $mform->createElement('checkbox', 'resetdisplayinstructions', '', $checkboxname);
+            $resetelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetdisplayinstructions', 'format_topcoll'));
+        } else {
+            $checkboxname = get_string('resetdisplayinstructions', 'format_topcoll').
+                $OUTPUT->help_icon('resetdisplayinstructions', 'format_topcoll');
+            $resetelements[] =& $mform->createElement('checkbox', 'resetdisplayinstructions', '', $checkboxname);
+        }
 
         if ($changelayout) {
-            $checkboxname = get_string('resetlayout', 'format_topcoll');
-            $resetelements[] = & $mform->createElement('checkbox', 'resetlayout', '', $checkboxname);
-            $resetelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetlayout', 'format_topcoll'));
+            if ($bsfour) {
+                $checkboxname = get_string('resetlayout', 'format_topcoll');
+                $resetelements[] = & $mform->createElement('checkbox', 'resetlayout', '', $checkboxname);
+                $resetelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetlayout', 'format_topcoll'));
+            } else {
+                $checkboxname = get_string('resetlayout', 'format_topcoll').$OUTPUT->help_icon('resetlayout', 'format_topcoll');
+                $resetelements[] =& $mform->createElement('checkbox', 'resetlayout', '', $checkboxname);
+            }
         }
 
         if ($changecolour) {
-            $checkboxname = get_string('resetcolour', 'format_topcoll');
-            $resetelements[] = & $mform->createElement('checkbox', 'resetcolour', '', $checkboxname);
-            $resetelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetcolour', 'format_topcoll'));
+            if ($bsfour) {
+                $checkboxname = get_string('resetcolour', 'format_topcoll');
+                $resetelements[] = & $mform->createElement('checkbox', 'resetcolour', '', $checkboxname);
+                $resetelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetcolour', 'format_topcoll'));
+            } else {
+                $checkboxname = get_string('resetcolour', 'format_topcoll').$OUTPUT->help_icon('resetcolour', 'format_topcoll');
+                $resetelements[] =& $mform->createElement('checkbox', 'resetcolour', '', $checkboxname);
+            }
         }
 
         if ($changetogglealignment) {
-            $checkboxname = get_string('resettogglealignment', 'format_topcoll');
-            $resetelements[] = & $mform->createElement('checkbox', 'resettogglealignment', '', $checkboxname);
-            $resetelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resettogglealignment', 'format_topcoll'));
+            if ($bsfour) {
+                $checkboxname = get_string('resettogglealignment', 'format_topcoll');
+                $resetelements[] = & $mform->createElement('checkbox', 'resettogglealignment', '', $checkboxname);
+                $resetelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resettogglealignment', 'format_topcoll'));
+            } else {
+                $checkboxname = get_string('resettogglealignment', 'format_topcoll').
+                    $OUTPUT->help_icon('resettogglealignment', 'format_topcoll');
+                $resetelements[] =& $mform->createElement('checkbox', 'resettogglealignment', '', $checkboxname);
+            }
         }
 
         if ($changetoggleiconset) {
-            $checkboxname = get_string('resettoggleiconset', 'format_topcoll');
-            $resetelements[] = & $mform->createElement('checkbox', 'resettoggleiconset', '', $checkboxname);
-            $resetelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resettoggleiconset', 'format_topcoll'));
+            if ($bsfour) {
+                $checkboxname = get_string('resettoggleiconset', 'format_topcoll');
+                $resetelements[] = & $mform->createElement('checkbox', 'resettoggleiconset', '', $checkboxname);
+                $resetelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resettoggleiconset', 'format_topcoll'));
+            } else {
+                $checkboxname = get_string('resettoggleiconset', 'format_topcoll').
+                    $OUTPUT->help_icon('resettoggleiconset', 'format_topcoll');
+                $resetelements[] =& $mform->createElement('checkbox', 'resettoggleiconset', '', $checkboxname);
+            }
         }
-
         $elements[] = $mform->addGroup($resetelements, 'resetgroup', get_string('resetgrp', 'format_topcoll'), null, false);
 
         if ($resetall) {
-            $resetallelements = [];
+            $resetallelements = array();
 
-            $checkboxname = get_string('resetalldisplayinstructions', 'format_topcoll');
-            $resetallelements[] = & $mform->createElement('checkbox', 'resetalldisplayinstructions', '', $checkboxname);
-            $resetallelements[] = & $mform->createElement(
-                'html',
-                $OUTPUT->help_icon('resetalldisplayinstructions', 'format_topcoll')
-            );
+            if ($bsfour) {
+                $checkboxname = get_string('resetalldisplayinstructions', 'format_topcoll');
+                $resetallelements[] = & $mform->createElement('checkbox', 'resetalldisplayinstructions', '', $checkboxname);
+                $resetallelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetalldisplayinstructions', 'format_topcoll'));
 
-            $checkboxname = get_string('resetalllayout', 'format_topcoll');
-            $resetallelements[] = & $mform->createElement('checkbox', 'resetalllayout', '', $checkboxname);
-            $resetallelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetalllayout', 'format_topcoll'));
+                $checkboxname = get_string('resetalllayout', 'format_topcoll');
+                $resetallelements[] = & $mform->createElement('checkbox', 'resetalllayout', '', $checkboxname);
+                $resetallelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetalllayout', 'format_topcoll'));
 
-            $checkboxname = get_string('resetallcolour', 'format_topcoll');
-            $resetallelements[] = & $mform->createElement('checkbox', 'resetallcolour', '', $checkboxname);
-            $resetallelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetallcolour', 'format_topcoll'));
+                $checkboxname = get_string('resetallcolour', 'format_topcoll');
+                $resetallelements[] = & $mform->createElement('checkbox', 'resetallcolour', '', $checkboxname);
+                $resetallelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetallcolour', 'format_topcoll'));
 
-            $checkboxname = get_string('resetalltogglealignment', 'format_topcoll');
-            $resetallelements[] = & $mform->createElement('checkbox', 'resetalltogglealignment', '', $checkboxname);
-            $resetallelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetalltogglealignment', 'format_topcoll'));
+                $checkboxname = get_string('resetalltogglealignment', 'format_topcoll');
+                $resetallelements[] = & $mform->createElement('checkbox', 'resetalltogglealignment', '', $checkboxname);
+                $resetallelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetalltogglealignment', 'format_topcoll'));
 
-            $checkboxname = get_string('resetalltoggleiconset', 'format_topcoll');
-            $resetallelements[] = & $mform->createElement('checkbox', 'resetalltoggleiconset', '', $checkboxname);
-            $resetallelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetalltoggleiconset', 'format_topcoll'));
+                $checkboxname = get_string('resetalltoggleiconset', 'format_topcoll');
+                $resetallelements[] = & $mform->createElement('checkbox', 'resetalltoggleiconset', '', $checkboxname);
+                $resetallelements[] = & $mform->createElement('html', $OUTPUT->help_icon('resetalltoggleiconset', 'format_topcoll'));
+            } else {
+                $checkboxname = get_string('resetalldisplayinstructions', 'format_topcoll').
+                    $OUTPUT->help_icon('resetalldisplayinstructions', 'format_topcoll');
+                $resetallelements[] =& $mform->createElement('checkbox', 'resetalldisplayinstructions', '', $checkboxname);
 
-            $elements[] = $mform->addGroup(
-                $resetallelements,
-                'resetallgroup',
-                get_string('resetallgrp', 'format_topcoll'),
-                null,
-                false
-            );
+                $checkboxname = get_string('resetalllayout', 'format_topcoll').
+                    $OUTPUT->help_icon('resetalllayout', 'format_topcoll');
+                $resetallelements[] =& $mform->createElement('checkbox', 'resetalllayout', '', $checkboxname);
+
+                $checkboxname = get_string('resetallcolour', 'format_topcoll').
+                    $OUTPUT->help_icon('resetallcolour', 'format_topcoll');
+                $resetallelements[] =& $mform->createElement('checkbox', 'resetallcolour', '', $checkboxname);
+
+                $checkboxname = get_string('resetalltogglealignment', 'format_topcoll').
+                    $OUTPUT->help_icon('resetalltogglealignment', 'format_topcoll');
+                $resetallelements[] =& $mform->createElement('checkbox', 'resetalltogglealignment', '', $checkboxname);
+
+                $checkboxname = get_string('resetalltoggleiconset', 'format_topcoll').
+                    $OUTPUT->help_icon('resetalltoggleiconset', 'format_topcoll');
+                $resetallelements[] =& $mform->createElement('checkbox', 'resetalltoggleiconset', '', $checkboxname);
+            }
+            $elements[] = $mform->addGroup($resetallelements, 'resetallgroup',
+                get_string('resetallgrp', 'format_topcoll'), null, false);
         }
 
         return $elements;
@@ -1374,7 +1184,7 @@ class format_topcoll extends core_courseformat\base {
      *         Do not repeat errors from $errors param here
      */
     public function edit_form_validation($data, $files, $errors) {
-        $retr = [];
+        $retr = array();
 
         if ($this->validate_colour($data['toggleforegroundcolour']) === false) {
             $retr['toggleforegroundcolour'] = get_string('colourrule', 'format_topcoll');
@@ -1425,7 +1235,7 @@ class format_topcoll extends core_courseformat\base {
      * Updates format options for a course
      *
      * In case if course format was changed to 'Collapsed Topics', we try to copy options
-     * 'numsections' and 'hiddensections' from the previous format.
+     * 'coursedisplay', 'numsections' and 'hiddensections' from the previous format.
      * If previous course format did not have 'numsections' option, we populate it with the
      * current number of sections.  The layout and colour defaults will come from 'course_format_options'.
      *
@@ -1494,12 +1304,22 @@ class format_topcoll extends core_courseformat\base {
 
         $data = (array) $data;
         if ($oldcourse !== null) {
-            $oldcourse = (array)$oldcourse;
+            $oldcourse = (array) $oldcourse;
             $options = $this->course_format_options();
             foreach ($options as $key => $unused) {
                 if (!array_key_exists($key, $data)) {
                     if (array_key_exists($key, $oldcourse)) {
                         $data[$key] = $oldcourse[$key];
+                    } else if ($key === 'numsections') {
+                        /* If previous format does not have the field 'numsections'
+                           and $data['numsections'] is not set,
+                           we fill it with the maximum section number from the DB. */
+                        $maxsection = $DB->get_field_sql('SELECT max(section) from {course_sections}
+                            WHERE course = ?', array($this->courseid));
+                        if ($maxsection) {
+                            // If there are no sections, or just default 0-section, 'numsections' will be set to default.
+                            $data['numsections'] = $maxsection;
+                        }
                     }
                 }
             }
@@ -1507,44 +1327,35 @@ class format_topcoll extends core_courseformat\base {
 
         $changes = $this->update_format_options($data);
 
+        if ($changes && array_key_exists('numsections', $data)) {
+            // If the numsections was decreased, try to completely delete the orphaned sections (unless they are not empty).
+            $numsections = (int)$data['numsections'];
+            $maxsection = $DB->get_field_sql('SELECT max(section) from {course_sections}
+                        WHERE course = ?', array($this->courseid));
+            for ($sectionnum = $maxsection; $sectionnum > $numsections; $sectionnum--) {
+                if (!$this->delete_section($sectionnum, false)) {
+                    break;
+                }
+            }
+        }
+
         // Now we can do the reset.
-        if (
-            ($resetalldisplayinstructions) ||
+        if (($resetalldisplayinstructions) ||
             ($resetalllayout) ||
             ($resetallcolour) ||
             ($resetalltogglealignment) ||
-            ($resetalltoggleiconset)
-        ) {
-                $this->reset_topcoll_setting(
-                    0,
-                    $resetalldisplayinstructions,
-                    $resetalllayout,
-                    $resetallcolour,
-                    $resetalltogglealignment,
-                    $resetalltoggleiconset
-                );
+            ($resetalltoggleiconset)) {
+            $this->reset_topcoll_setting(0, $resetalldisplayinstructions, $resetalllayout, $resetallcolour,
+                $resetalltogglealignment, $resetalltoggleiconset);
             $changes = true;
-        } else if (
-            ($resetdisplayinstructions) ||
+        } else if (($resetdisplayinstructions) ||
             ($resetlayout) ||
             ($resetcolour) ||
             ($resettogglealignment) ||
-            ($resettoggleiconset)
-        ) {
-                $this->reset_topcoll_setting(
-                    $this->courseid,
-                    $resetdisplayinstructions,
-                    $resetlayout,
-                    $resetcolour,
-                    $resettogglealignment,
-                    $resettoggleiconset
-                );
+            ($resettoggleiconset)) {
+            $this->reset_topcoll_setting($this->courseid, $resetdisplayinstructions, $resetlayout, $resetcolour,
+                $resettogglealignment, $resettoggleiconset);
             $changes = true;
-        }
-
-        if ($changes) {
-            // Invalidate the settings.
-            $this->settings = null;
         }
 
         return $changes;
@@ -1628,184 +1439,6 @@ class format_topcoll extends core_courseformat\base {
     }
 
     /**
-     * Return the shown sections.
-     * Takes into account the course settings beyond visibility and returns them in the order to be shown.
-     *
-     * @return array of data required, indexes containing:
-     *      'sectionzero' Section_info instance if section zero is shown.
-     *      'sectionsdisplayed' Section_info instances, array, that are shown.
-     *      'delegatedsectionsdisplayed' Delegated section_info instances, array, that are shown.
-     *      'currentsectionno' Section number of the current section or if none then false.
-     *      'hiddensectionids' Section id's, array, of hidden sections if any.
-     *      'coursenumsections' Number of sections in the course regardless if shown or not.
-     */
-    public function get_shown_sections() {
-        $course = $this->get_course();
-        $modinfo = get_fast_modinfo($course);
-        $sections = $modinfo->get_section_info_all();
-        $delegatedsections = [];
-        // Array of parent section number with an array of delegated section id's if they have them.
-        $delegatedsectionparents = [];
-        $sectionsdisplayed = [];
-        $delegatedsectionsdisplayed = [];
-        $currentsectionno = false;
-        $hiddensectionids = [];
-
-        // Find the subsections and who their parent is.
-        // All the delegated sections as modules in the course.
-        foreach ($modinfo->delegatedbycm as $delegatedcmsectioninfokey => $delegatedcmsectioninfo) {
-            // Note: cm_info object contains parent sectionid / sectionnum.  As a subsection is a module
-            // here then this will be the parent section.
-            $cminfoparentsectionnum = $modinfo->cms[$delegatedcmsectioninfokey]->sectionnum;
-            if (empty($delegatedsectionparents[$cminfoparentsectionnum])) {
-                $delegatedsectionparents[$cminfoparentsectionnum] = [];
-            }
-            $delegatedsectionparents[$cminfoparentsectionnum][] = $delegatedcmsectioninfo->id;
-            $delegatedsections[$delegatedcmsectioninfo->id] = $delegatedcmsectioninfo;
-        }
-
-        // General section if non-empty.
-        $thissection = $sections[0];
-        if ($this->is_section_visible($thissection)) {
-            $sectionzero = $thissection;
-
-            // Does it contain visible subsection(s)?
-            if (!empty($delegatedsectionparents[$thissection->section])) {
-                foreach ($delegatedsectionparents[$thissection->section] as $delegatedsectionid) {
-                    if (parent::is_section_visible($delegatedsections[$delegatedsectionid])) {
-                        $delegatedsectionsdisplayed[$delegatedsections[$delegatedsectionid]->section] =
-                        $delegatedsections[$delegatedsectionid];
-                    }
-                }
-            }
-        } else {
-            $sectionzero = null;
-        }
-
-        $coursenumsections = $this->get_last_section_number_without_delegated();
-        if ($coursenumsections > 0) {
-            $tcsettings = $this->get_settings();
-            $coursenumsections = $this->get_last_section_number_without_delegated();
-            $userisediting = $this->show_editor();
-            $sectionskeys = array_keys($sections);
-
-            $currentsectionfirst = false;
-            if (($tcsettings['layoutstructure'] == 4) && (!$userisediting)) {
-                $currentsectionfirst = true;
-            }
-
-            if (($tcsettings['layoutstructure'] != 3) || ($userisediting)) {
-                $section = 1;
-            } else {
-                $timenow = time();
-                $weekofseconds = 604800;
-                $course->enddate = $course->startdate + ($weekofseconds * $coursenumsections);
-                $section = $coursenumsections;
-                $weekdate = $course->enddate;      // This should be 0:00 Monday of that week.
-                $weekdate -= 7200;                 // Subtract two hours to avoid possible DST problems.
-            }
-
-            $loopsection = 1;
-            while ($loopsection <= $coursenumsections) {
-                if (($tcsettings['layoutstructure'] == 3) && ($userisediting == false)) {
-                    $nextweekdate = $weekdate - ($weekofseconds);
-                }
-                $thissection = $modinfo->get_section_info($sectionskeys[$section]);
-
-                /* Show the section if the user is permitted to access it, OR if it's not available
-                   but there is some available info text which explains the reason & should display. */
-                $showsection = ($this->is_section_visible($thissection));
-                if ($showsection && ($tcsettings['layoutstructure'] == 3) && (!$userisediting)) {
-                    $showsection = ($nextweekdate <= $timenow);
-                }
-
-                if ($currentsectionfirst && $showsection) {
-                    // Show the section if we were meant to and it is the current section:....
-                    $showsection = ($course->marker == $section);
-                } else if (
-                    ($tcsettings['layoutstructure'] == 4) &&
-                    ($course->marker == $section) && (!$userisediting)
-                ) {
-                    $showsection = false; // Do not reshow current section.
-                }
-                $addsection = false;
-                if ($showsection) {
-                    if ($this->is_section_current($thissection)) {
-                        $currentsectionno = $thissection->section;
-                    }
-                    // This section is shown.
-                    $addsection = true;
-                } else {
-                    // Hidden section message is overridden by 'unavailable' control.
-                    $testhidden = false;
-                    if ($tcsettings['layoutstructure'] != 4) {
-                        if (($tcsettings['layoutstructure'] != 3) || ($userisediting)) {
-                            $testhidden = true;
-                        } else if ($nextweekdate <= $timenow) {
-                            $testhidden = true;
-                        }
-                    } else {
-                        if (($currentsectionfirst == true) && ($course->marker == $section)) {
-                            $testhidden = true;
-                        } else if (($currentsectionfirst == false) && ($course->marker != $section)) {
-                            $testhidden = true;
-                        }
-                    }
-                    if ($testhidden) {
-                        if (!$course->hiddensections) {
-                            // This section is shown as hidden.
-                            $addsection = true;
-                            $hiddensectionids[] = $thissection->id;
-                        }
-                    }
-                }
-                if ($addsection) {
-                    $sectionsdisplayed[$thissection->section] = $thissection;
-                    // Does it contain visible subsection(s)?
-                    if (!empty($delegatedsectionparents[$thissection->section])) {
-                        foreach ($delegatedsectionparents[$thissection->section] as $delegatedsectionid) {
-                            if (parent::is_section_visible($delegatedsections[$delegatedsectionid])) {
-                                $delegatedsectionsdisplayed[$delegatedsections[$delegatedsectionid]->section] =
-                                    $delegatedsections[$delegatedsectionid];
-                            }
-                        }
-                    }
-                }
-
-                if (($tcsettings['layoutstructure'] != 3) || ($userisediting)) {
-                    $section++;
-                } else {
-                    $section--;
-                    if (($tcsettings['layoutstructure'] == 3) && ($userisediting == false)) {
-                        $weekdate = $nextweekdate;
-                    }
-                }
-
-                $loopsection++;
-                if (($currentsectionfirst == true) && ($loopsection > $coursenumsections)) {
-                    // Now show the rest.
-                    $currentsectionfirst = false;
-                    $loopsection = 1;
-                    $section = 1;
-                }
-                if ($section > $coursenumsections) {
-                    // Activities inside this section are 'orphaned', this section will be printed as 'stealth' in the renderer.
-                    break;
-                }
-            }
-        }
-
-        return [
-            'sectionzero' => $sectionzero,
-            'sectionsdisplayed' => $sectionsdisplayed,
-            'delegatedsectionsdisplayed' => $delegatedsectionsdisplayed,
-            'currentsectionno' => $currentsectionno,
-            'hiddensectionids' => $hiddensectionids,
-            'coursenumsections' => $coursenumsections,
-        ];
-    }
-
-    /**
      * Resets the format setting to the default.
      * @param int $courseid If not 0, then a specific course to reset.
      * @param int $displayinstructions If true, reset the display instructions to the default in the settings for the format.
@@ -1814,33 +1447,22 @@ class format_topcoll extends core_courseformat\base {
      * @param int $togglealignment If true, reset the toggle alignment to the default in the settings for the format.
      * @param int $toggleiconset If true, reset the toggle icon set to the default in the settings for the format.
      */
-    public function reset_topcoll_setting(
-        $courseid,
-        $displayinstructions,
-        $layout,
-        $colour,
-        $togglealignment,
-        $toggleiconset
-    ) {
+    public function reset_topcoll_setting($courseid, $displayinstructions, $layout, $colour, $togglealignment, $toggleiconset) {
         global $DB, $USER;
 
         $context = $this->get_context();
 
         $currentcourseid = 0;
         if ($courseid == 0) {
-            $records = $DB->get_records('course_format_options', ['format' => $this->format], '', 'id,courseid');
+            $records = $DB->get_records('course_format_options', array('format' => $this->format), '', 'id,courseid');
         } else {
-            $records = $DB->get_records(
-                'course_format_options',
-                ['courseid' => $courseid, 'format' => $this->format],
-                '',
-                'id,courseid'
-            );
+            $records = $DB->get_records('course_format_options', array('courseid' => $courseid, 'format' => $this->format),
+                '', 'id,courseid');
         }
 
         $resetallifall = ((is_siteadmin($USER)) || ($courseid != 0)); // Will be true if reset all capability or a single course.
 
-        $updatedata = [];
+        $updatedata = array();
         $updatedisplayinstructions = false;
         $updatelayout = false;
         $updatetogglealignment = false;
@@ -1855,12 +1477,12 @@ class format_topcoll extends core_courseformat\base {
             $updatedata['layoutstructure'] = 0;
             $updatedata['layoutcolumns'] = 0;
             $updatedata['layoutcolumnorientation'] = 0;
-            $updatedata['flexiblemodules'] = 0;
             $updatedata['toggleallenabled'] = 0;
             $updatedata['viewsinglesectionenabled'] = 0;
             $updatedata['toggleiconposition'] = 0;
             $updatedata['onesection'] = 0;
             $updatedata['showsectionsummary'] = 0;
+            $updatedata['showadditionalmoddata'] = 0;
             $updatelayout = true;
         }
         if ($togglealignment && has_capability('format/topcoll:changetogglealignment', $context) && $resetallifall) {
@@ -1880,8 +1502,6 @@ class format_topcoll extends core_courseformat\base {
         }
         if ($toggleiconset && has_capability('format/topcoll:changetoggleiconset', $context) && $resetallifall) {
             $updatedata['toggleiconset'] = '-';
-            $updatedata['toggleiconfontclosed'] = '-';
-            $updatedata['toggleiconfontopen'] = '-';
             $updatedata['toggleallhover'] = 0;
             $updatetoggleiconset = true;
         }
@@ -1889,13 +1509,11 @@ class format_topcoll extends core_courseformat\base {
         foreach ($records as $record) {
             if ($currentcourseid != $record->courseid) {
                 $currentcourseid = $record->courseid; // Only do once per course.
-                if (
-                    ($updatedisplayinstructions) ||
+                if (($updatedisplayinstructions) ||
                     ($updatelayout) ||
                     ($updatetogglealignment) ||
                     ($updatecolour) ||
-                    ($updatetoggleiconset)
-                ) {
+                    ($updatetoggleiconset)) {
                     $ourcourseid = $this->courseid;
                     $this->courseid = $currentcourseid;
                     $this->update_format_options($updatedata);
@@ -1917,25 +1535,18 @@ class format_topcoll extends core_courseformat\base {
      * @param int $tgbgcolour The background colour.
      * @param int $tgbghvrcolour The background hover colour.
      */
-    public function restore_topcoll_setting(
-        $courseid,
-        $layoutelement,
-        $layoutstructure,
-        $layoutcolumns,
-        $tgfgcolour,
-        $tgbgcolour,
-        $tgbghvrcolour
-    ) {
+    public function restore_topcoll_setting($courseid, $layoutelement, $layoutstructure, $layoutcolumns, $tgfgcolour,
+        $tgbgcolour, $tgbghvrcolour) {
         $currentcourseid = $this->courseid;  // Save for later - stack data model.
         $this->courseid = $courseid;
         // Create data array.
-        $data = [
+        $data = array(
             'layoutelement' => $layoutelement,
             'layoutstructure' => $layoutstructure,
             'layoutcolumns' => $layoutcolumns,
             'toggleforegroundcolour' => $tgfgcolour,
             'togglebackgroundcolour' => $tgbgcolour,
-            'togglebackgroundhovercolour' => $tgbghvrcolour, ];
+            'togglebackgroundhovercolour' => $tgbghvrcolour);
 
         $lco = get_config('format_topcoll', 'defaultlayoutcolumnorientation');
         if (empty($lco)) {
@@ -1943,7 +1554,6 @@ class format_topcoll extends core_courseformat\base {
             // Defaults taken from 'settings.php'.
             $data['displayinstructions'] = 0;
             $data['layoutcolumnorientation'] = 0;
-            $data['flexiblemodules'] = 0;
             $data['toggleallenabled'] = 0;
             $data['viewsinglesectionenabled'] = 0;
             $data['showsectionsummary'] = 0;
@@ -1951,9 +1561,23 @@ class format_topcoll extends core_courseformat\base {
             $data['toggleallhover'] = 0;
             $data['toggleiconposition'] = 0;
             $data['toggleiconset'] = '-';
-            $data['toggleiconfontclosed'] = '-';
-            $data['toggleiconfontopen'] = '-';
+            $data['showadditionalmoddata'] = 0;
         }
+        $this->update_course_format_options($data);
+
+        $this->courseid = $currentcourseid;
+    }
+
+    /**
+     * Restores the numsections if was not in the backup.
+     * @param int $courseid If not 0, then a specific course to reset.
+     * @param int $numsections The number of sections.
+     */
+    public function restore_numsections($courseid, $numsections) {
+        $currentcourseid = $this->courseid;  // Save for later - stack data model.
+        $this->courseid = $courseid;
+
+        $data = array('numsections' => $numsections);
         $this->update_course_format_options($data);
 
         $this->courseid = $currentcourseid;
@@ -1965,7 +1589,7 @@ class format_topcoll extends core_courseformat\base {
      */
     public function update_topcoll_columns_setting($layoutcolumns) {
         // Create data array.
-        $data = ['layoutcolumns' => $layoutcolumns];
+        $data = array('layoutcolumns' => $layoutcolumns);
 
         $this->update_course_format_options($data);
     }
@@ -1982,23 +1606,30 @@ class format_topcoll extends core_courseformat\base {
         return true;
     }
 
+    private function get_context() {
+        global $SITE;
+
+        if ($SITE->id == $this->courseid) {
+            // Use the context of the page which should be the course category.
+            global $PAGE;
+            return $PAGE->context;
+        } else {
+            return context_course::instance($this->courseid);
+        }
+    }
+
     /**
      * Prepares the templateable object to display section name.
      *
-     * @param section_info|stdClass $section
+     * @param \section_info|\stdClass $section
      * @param bool $linkifneeded
      * @param bool $editable
      * @param null|lang_string|string $edithint
      * @param null|lang_string|string $editlabel
-     * @return core\output\inplace_editable
+     * @return \core\output\inplace_editable
      */
-    public function inplace_editable_render_section_name(
-        $section,
-        $linkifneeded = true,
-        $editable = null,
-        $edithint = null,
-        $editlabel = null
-    ) {
+    public function inplace_editable_render_section_name($section, $linkifneeded = true,
+                                                         $editable = null, $edithint = null, $editlabel = null) {
         if (empty($edithint)) {
             $edithint = new lang_string('editsectionname', 'format_topcoll');
         }
@@ -2011,6 +1642,15 @@ class format_topcoll extends core_courseformat\base {
     }
 
     /**
+     * Indicates whether the course format supports the creation of a news forum.
+     *
+     * @return bool
+     */
+    public function supports_news() {
+        return true;
+    }
+
+    /**
      * Returns whether this course format allows the activity to
      * have "triple visibility state" - visible always, hidden on course page but available, hidden.
      *
@@ -2019,23 +1659,10 @@ class format_topcoll extends core_courseformat\base {
      * @return bool
      */
     public function allow_stealth_module_visibility($cm, $section) {
-        // Allow the third visibility state inside visible sections or in section 0.
-        return !$section->section || $section->visible;
+        // Allow the third visibility state inside visible sections or in section 0, not allow in orphaned sections.
+        return !$section->section || ($section->visible && $section->section <= $this->get_course()->numsections);
     }
 
-    /**
-     * Callback used in WS core_course_edit_section when teacher performs an AJAX action on a section (show/hide)
-     *
-     * Access to the course is already validated in the WS but the callback has to make sure
-     * that particular action is allowed by checking capabilities
-     *
-     * Course formats should register
-     *
-     * @param stdClass|section_info $section
-     * @param string $action
-     * @param int $sr the section return
-     * @return null|array|stdClass any data for the Javascript post-processor (must be json-encodeable)
-     */
     public function section_action($section, $action, $sr) {
         global $PAGE;
 
@@ -2053,53 +1680,10 @@ class format_topcoll extends core_courseformat\base {
         // For show/hide actions call the parent method and return the new content for .section_availability element.
         $rv = parent::section_action($section, $action, $sr);
         $renderer = $PAGE->get_renderer('format_topcoll');
-
-        if (!($section instanceof section_info)) {
-            $modinfo = course_modinfo::instance($this->courseid);
-            $section = $modinfo->get_section_info($section->section);
-        }
-        $elementclass = $this->get_output_classname('content\\section\\availability');
-        $availability = new $elementclass($this, $section);
-
-        $rv['section_availability'] = $renderer->render($availability);
+        $rv['section_availability'] = $renderer->section_availability($this->get_section($section));
 
         return $rv;
     }
-
-    /**
-     * Get the required javascript files for the course format.
-     *
-     * @return array The list of javascript files required by the course format.
-     */
-    public function get_required_jsfiles(): array {
-        return [];
-    }
-}
-
-/**
- * Override the core_output_load_template function to use our Mustache template finder.
- *
- * Info on: https://docs.moodle.org/dev/Miscellaneous_callbacks#override_webservice_execution
- *
- * @param stdClass $function Function details.
- * @param array $params Parameters
- *
- * @return boolean Success.
- */
-function format_topcoll_override_webservice_execution($function, $params) {
-    // Check if it's the function we want to override.
-    if ($function->name === 'core_courseformat_get_state') {
-        // Only one parameter of the course id.
-        $courseformat = course_get_format($params[0]);
-        if ($courseformat->get_format() != 'topcoll') {
-            return false;
-        }
-
-        // Call our load template function in our class instead of $function->classname.
-        return call_user_func_array(['format_topcoll\external\get_state', $function->methodname], $params);
-    }
-
-    return false;
 }
 
 /**
@@ -2117,9 +1701,7 @@ function format_topcoll_inplace_editable($itemtype, $itemid, $newvalue) {
         global $DB;
         $section = $DB->get_record_sql(
             'SELECT s.* FROM {course_sections} s JOIN {course} c ON s.course = c.id WHERE s.id = ? AND c.format = ?',
-            [$itemid, 'topcoll'],
-            MUST_EXIST
-        );
+            array($itemid, 'topcoll'), MUST_EXIST);
         return course_get_format($section->course)->inplace_editable_update_section_name($section, $itemtype, $newvalue);
     }
 }
